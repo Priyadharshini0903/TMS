@@ -1,7 +1,7 @@
 import mysql from "mysql2/promise";
 
 const g = globalThis as unknown as { pool?: mysql.Pool };
-console.log("ENV CHECK:", process.env.DB_HOST, process.env.DB_USER, !!process.env.DB_PASS);
+console.log("ENV CHECK:", process.env.MYSQL_HOST, process.env.MYSQL_USER, !!process.env.MYSQL_PASSWORD);
 export const db =
   g.pool ??
   (g.pool = mysql.createPool({

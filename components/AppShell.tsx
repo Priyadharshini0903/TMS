@@ -35,14 +35,14 @@ export default function AppShell({ plantId, plantCode, mode, truckReg, autoWb, r
   );
 
   const main: [string, string, boolean][] = [
-    ["/dashboard", "DashBoard", true],
+    // ["/dashboard", "DashBoard", true],
     ["/truck-registration", "Truck Registration", truckReg],
     ["/gate-rfid", "Gate RFID(s)", true],
     ["/weighbridges", "Weighbridge(s)", autoWb],
     ["/raw-weighbridges", "Raw Weighbridge(s)", raw],
     ["/bulkers", "Bulker(s)", bulker],
     ["/device-status", "Device(s) Status", true],
-    ["/repost", "Re-Post Request", true],
+    // ["/repost", "Re-Post Request", true],
   ];
 
   return (
@@ -96,7 +96,7 @@ export default function AppShell({ plantId, plantCode, mode, truckReg, autoWb, r
             </div>
           )}
 
-          {item("/settings", "Settings")}
+          {/* {item("/settings", "Settings")} */}
         </div>
       </nav>
 
