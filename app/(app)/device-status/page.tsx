@@ -1,64 +1,215 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-type GateRow = {
+type GateDevice = {
   LOCATION?: string;
+  LOCSTR?: string;
   RFIDIP?: string;
-  RFIDSTATUS?: boolean | number | string | null;
+  RFIDSTATUS?: boolean | string;
   DSPIP?: string;
-  DSPSTATUS?: boolean | number | string | null;
+  DSPSTATUS?: boolean | string;
 };
 
-type Weighbridge = {
-  WBID: number;
-  LOCNAME: string;
+type WBDevice = {
+  LOCNAME?: string;
+  RFID1IP?: string;
+  RF1STAT?: string;
+  RFID2IP?: string;
+  RF2STAT?: string;
+  WB1DSPIP?: string;
+  WB1DSPSTAT?: string;
+  WB2DSPIP?: string;
+  WB2DSPSTAT?: string;
+  WBINDIP?: string;
+  WBINDSTAT?: string;
+  WBCTRIP?: string;
+  WBCTRSTAT?: string;
 };
 
-type DeviceData = Record<string, unknown>;
-
-type WBRow = {
-  WBID: number;
-  LOCNAME: string;
-  data: DeviceData | null;
-  error?: string;
+type Section<T> = {
+  data: T[];
+  error: string | null;
 };
 
-function isHealthy(value: unknown): boolean | null {
-  if (value === null || value === undefined || value === "") return null;
+type StatusResponse = {
+  gate: Section<GateDevice>;
+  automaticWB: Section<WBDevice>;
+  bulkerWB: Section<WBDevice>;
+  updatedAt: string;
+};
 
-  const v = String(value).toLowerCase().trim();
-
-  if (["1", "true", "healthy", "online", "connected"].includes(v)) {
-    return true;
-  }
-
-  if (["0", "false", "unhealthy", "offline", "disconnected"].includes(v)) {
-    return false;
-  }
-
-  return null;
+function isHealthy(value: boolean | string | undefined) {
+  return value === true || value === "true";
 }
 
-function Health({ value }: { value: unknown }) {
+function StatusIndicator({ value }: { value: boolean | string | undefined }) {
   const healthy = isHealthy(value);
 
-  if (healthy === null) {
-    return <span className="text-gray-500">—</span>;
-  }
+  return (
+    <span
+      title={healthy ? "Healthy" : "Network Issue"}
+      className={`inline-block h-5 w-5 rounded-md ${
+        healthy ? "bg-green-500" : "bg-red-500"
+      }`}
+    />
+  );
+}
+
+function StatusMessage({ error }: { error: string | null }) {
+  if (!error) return null;
 
   return (
-    <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
-      <span className={healthy ? "text-green-400" : "text-red-400"}>
-        {healthy ? "Healthy" : "Network Issue"}
-      </span>
-      <span
-        className={`h-4 w-4 rounded-sm ${
-          healthy ? "bg-green-500" : "bg-red-500"
-        }`}
-      />
-    </span>
+    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {error}
+    </div>
+  );
+}
+
+
+function TableContainer({
+  title,
+  children,
+  error,
+  empty,
+}: {
+  title: string;
+  children: React.ReactNode;
+  error: string | null;
+  empty: boolean;
+}) {
+  return (
+    <section className="mb-6 overflow-hidden border border-gray-300 bg-white">
+      <div className="border-b border-gray-300 bg-gray-100 px-4 py-3">
+        <h2 className="text-base font-semibold text-gray-800">
+          {title}
+        </h2>
+      </div>
+
+      <div className="overflow-x-auto">
+        {children}
+
+        {empty && (
+          <div className="border-t border-gray-200 px-4 py-5 text-center text-sm text-gray-600">
+            {error
+              ? "Unable to retrieve device status."
+              : "No data available."}
+          </div>
+        )}
+
+        {error && (
+          <div className="border-t border-red-200 bg-red-50 px-4 py-2 text-xs text-red-700">
+            {error}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+} 
+ 
+function StatusTable({
+  headers,
+  children,
+}: {
+  headers: string[];
+  children: React.ReactNode;
+}) {
+  return (
+    <table className="w-full min-w-max border-collapse text-sm">
+      <thead className="bg-[#0E5EAD] text-center text-white">
+        <tr>
+          {headers.map((header) => (
+            <th key={header} className="border border-blue-300 px-4 py-3 font-medium">
+              {header}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>{children}</tbody>
+    </table>
+  );
+}
+
+function WBTable({ devices }: { devices: WBDevice[] }) {
+  const headers = [
+    "Sno",
+    "Location",
+    "Reader-1 IP",
+    "Reader-1 Status",
+    "Reader-2 IP",
+    "Reader-2 Status",
+    "Display-1 IP",
+    "Display-1 Status",
+    "Display-2 IP",
+    "Display-2 Status",
+    "WB Indicator IP",
+    "WB Indicator Status",
+    "WB Controller IP",
+    "WB Controller Status",
+  ];
+
+  const rows = [
+    ["RFID1IP", "RF1STAT"],
+    ["RFID2IP", "RF2STAT"],
+    ["WB1DSPIP", "WB1DSPSTAT"],
+    ["WB2DSPIP", "WB2DSPSTAT"],
+    ["WBINDIP", "WBINDSTAT"],
+    ["WBCTRIP", "WBCTRSTAT"],
+  ] as const;
+
+  return (
+    <StatusTable headers={headers}>
+      {devices.map((device, index) => (
+        <tr key={index} className="text-center font-medium text-gray-700 hover:bg-gray-50">
+          <td className="border px-3 py-3">{index + 1}</td>
+          <td className="border px-3 py-3 text-left">{device.LOCNAME || "-"}</td>
+
+          {rows.map(([ipKey, statusKey]) => (
+            <React.Fragment key={ipKey}>
+              <td className="border px-3 py-3 text-left">
+                {device[ipKey] || "-"}
+              </td>
+              <td className="border px-3 py-3">
+                <StatusIndicator value={device[statusKey]} />
+              </td>
+            </React.Fragment>
+          ))}
+        </tr>
+      ))}
+    </StatusTable>
+  );
+}
+
+function GateTable({ devices }: { devices: GateDevice[] }) {
+  return (
+    <StatusTable
+      headers={[
+        "Sno",
+        "Location",
+        "Reader IP",
+        "Reader Status",
+        "Display IP",
+        "Display Status",
+      ]}
+    >
+      {devices.map((device, index) => (
+        <tr key={index} className="text-center font-medium text-gray-700 hover:bg-gray-50">
+          <td className="border px-3 py-3">{index + 1}</td>
+          <td className="border px-3 py-3 text-left">
+            {device.LOCATION || device.LOCSTR || "-"}
+          </td>
+          <td className="border px-3 py-3 text-left">{device.RFIDIP || "-"}</td>
+          <td className="border px-3 py-3">
+            <StatusIndicator value={device.RFIDSTATUS} />
+          </td>
+          <td className="border px-3 py-3 text-left">{device.DSPIP || "-"}</td>
+          <td className="border px-3 py-3">
+            <StatusIndicator value={device.DSPSTATUS} />
+          </td>
+        </tr>
+      ))}
+    </StatusTable>
   );
 }
 
@@ -111,9 +262,29 @@ function TableCell({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function DeviceStatus() {
-  const [gateRows, setGateRows] = useState<GateRow[]>([]);
-  const [gateConnection, setGateConnection] = useState<boolean | null>(null);
+export default function DeviceStatusPage() {
+  const [result, setResult] = useState<StatusResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState("");
+  const [pageError, setPageError] = useState("");
+
+  const activeController = useRef<AbortController | null>(null);
+
+  const fetchStatus = useCallback(async (signal: AbortSignal) => {
+    const response = await fetch("/api/device-status", {
+      method: "GET",
+      cache: "no-store",
+      signal,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to load Device Status");
+    }
+
+    return data as StatusResponse;
+  }, []);
 
   const [weighbridges, setWeighbridges] = useState<WBRow[]>([]);
   const [wbConnection, setWbConnection] = useState<boolean | null>(null);
@@ -122,301 +293,136 @@ export default function DeviceStatus() {
 
   // GATE DEVICE STATUS - existing PHP equivalent, 7-second polling
   useEffect(() => {
-    let alive = true;
-    let timer: ReturnType<typeof setTimeout>;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let failures = 0;
 
-    const poll = async () => {
-      const start = Date.now();
+    const schedule = (delay: number) => {
+      if (stopped || document.hidden) return;
+      timer = setTimeout(run, delay);
+    };
+
+    const run = async () => {
+      if (stopped || document.hidden) return;
+
+      const controller = new AbortController();
+      activeController.current = controller;
 
       try {
-        const response = await fetch("/api/gate-status?id=22", {
-          cache: "no-store",
-        });
+        const data = await fetchStatus(controller.signal);
 
-        if (!response.ok) throw new Error("Gate status request failed");
+        if (stopped) return;
 
-        const data = await response.json();
+        setResult(data);
+        setLastUpdated(new Date().toLocaleTimeString());
+        setPageError("");
+        failures = 0;
+      } catch (error) {
+        if (stopped || controller.signal.aborted) return;
 
-        if (!Array.isArray(data)) throw new Error("Invalid gate response");
-
-        if (alive) {
-          setGateRows(data);
-          setGateConnection(true);
-        }
-      } catch {
-        if (alive) setGateConnection(false);
-      }
-
-      if (alive) {
-        timer = setTimeout(
-          poll,
-          Math.max(0, 7000 - (Date.now() - start))
+        failures += 1;
+        setPageError(
+          error instanceof Error ? error.message : "Unable to load Device Status"
         );
+      } finally {
+        if (activeController.current === controller) {
+          activeController.current = null;
+        }
+
+        if (!stopped && !document.hidden) {
+          const delay =
+            failures === 0
+              ? 7000
+              : Math.min(5000 * 2 ** (failures - 1), 30000);
+
+          schedule(delay);
+        }
       }
     };
 
-    void poll();
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (timer) clearTimeout(timer);
+        activeController.current?.abort();
+      } else {
+        if (timer) clearTimeout(timer);
+        run();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    run();
 
     return () => {
-      alive = false;
-      clearTimeout(timer);
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      activeController.current?.abort();
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, []);
-
-  // WEIGHBRIDGE DEVICE STATUS - reuse the existing TCP API
-  const fetchWeighbridgeStatus = useCallback(async () => {
-    setWbLoading(true);
-
-    try {
-      const listResponse = await fetch("/api/weighbridge/list", {
-        cache: "no-store",
-      });
-
-      if (!listResponse.ok) {
-        throw new Error("Unable to load weighbridge list");
-      }
-
-      const list: Weighbridge[] = await listResponse.json();
-
-      const results = await Promise.all(
-        list.map(async (wb) => {
-          try {
-            const response = await fetch(
-              `/api/weighbridge/status?id=${wb.WBID}`,
-              { cache: "no-store" }
-            );
-
-            const raw = await response.text();
-
-            if (!response.ok) {
-              let message = "Controller unavailable";
-
-              try {
-                message = JSON.parse(raw).message ?? message;
-              } catch {
-                // Keep fallback message.
-              }
-
-              throw new Error(message);
-            }
-
-            const data = parseControllerResponse(raw, wb.WBID);
-
-            return {
-              WBID: wb.WBID,
-              LOCNAME: wb.LOCNAME,
-              data,
-            };
-          } catch (error) {
-            return {
-              WBID: wb.WBID,
-              LOCNAME: wb.LOCNAME,
-              data: null,
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "Unable to read controller",
-            };
-          }
-        })
-      );
-
-      setWeighbridges(results);
-
-      setWbConnection(
-        results.length > 0 && results.some((row) => row.data !== null)
-      );
-    } catch (error) {
-      console.error("Device status error:", error);
-      setWbConnection(false);
-      setWeighbridges([]);
-    } finally {
-      setWbLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let alive = true;
-    let timer: ReturnType<typeof setTimeout>;
-
-    const poll = async () => {
-      await fetchWeighbridgeStatus();
-
-      if (alive) {
-        timer = setTimeout(poll, 7000);
-      }
-    };
-
-    void poll();
-
-    return () => {
-      alive = false;
-      clearTimeout(timer);
-    };
-  }, [fetchWeighbridgeStatus]);
+  }, [fetchStatus]);
 
   return (
-    <main className="min-w-0 space-y-6 p-4">
-      {/* PAGE HEADER */}
+    <div className="space-y-5 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold italic text-accent">
-          DEVICE STATUS
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Device Status</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Live connectivity status of plant devices
+          </p>
+        </div>
 
-        <div className="flex flex-wrap gap-2 text-xs font-semibold">
-          <span
-            className={`rounded px-3 py-2 ${
-              gateConnection === null
-                ? "bg-white/10 text-gray-400"
-                : gateConnection
-                ? "bg-green-500/15 text-green-400"
-                : "bg-red-500/15 text-red-400"
-            }`}
-          >
-            Gate: {gateConnection === null ? "Connecting..." : gateConnection ? "Connected" : "Disconnected"}
-          </span>
-
-          <span
-            className={`rounded px-3 py-2 ${
-              wbConnection === null
-                ? "bg-white/10 text-gray-400"
-                : wbConnection
-                ? "bg-green-500/15 text-green-400"
-                : "bg-red-500/15 text-red-400"
-            }`}
-          >
-            Weighbridge: {wbLoading && wbConnection === null ? "Connecting..." : wbConnection ? "Connected" : "Disconnected"}
-          </span>
+        <div className="text-right text-xs text-gray-500">
+          <div className="flex items-center justify-end gap-2">
+            <span className="h-2 w-2 rounded-full bg-green-500" />
+            Auto refresh enabled
+          </div>
+          <p className="mt-1">
+            Last updated: {lastUpdated || "Waiting..."}
+          </p>
         </div>
       </div>
 
-      {/* GATE DEVICE STATUS */}
-      <section className="card overflow-hidden rounded-xl border border-teal/40">
-        <h2 className="border-b border-teal/30 bg-[#202624] px-4 py-3 font-bold text-accent">
-          Gate Device Status
-        </h2>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px] border-collapse text-left">
-            <thead>
-              <tr>
-                <TableHeader>Sno</TableHeader>
-                <TableHeader>Location</TableHeader>
-                <TableHeader>Reader IP</TableHeader>
-                <TableHeader>Reader Status</TableHeader>
-                <TableHeader>Display IP</TableHeader>
-                <TableHeader>Display Status</TableHeader>
-              </tr>
-            </thead>
-
-            <tbody>
-              {gateRows.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-5 text-center text-muted">
-                    {gateConnection === false
-                      ? "Unable to retrieve gate device information."
-                      : "Loading gate devices..."}
-                  </td>
-                </tr>
-              ) : (
-                gateRows.map((row, index) => (
-                  <tr
-                    key={`${row.LOCATION ?? "gate"}-${index}`}
-                    className="border-t border-white/10 hover:bg-white/5"
-                  >
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{valueOrDash(row.LOCATION)}</TableCell>
-                    <TableCell>{valueOrDash(row.RFIDIP)}</TableCell>
-                    <TableCell><Health value={row.RFIDSTATUS} /></TableCell>
-                    <TableCell>{valueOrDash(row.DSPIP)}</TableCell>
-                    <TableCell><Health value={row.DSPSTATUS} /></TableCell>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {pageError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {pageError}
         </div>
-      </section>
+      )}
 
-      {/* WEIGHBRIDGE DEVICE STATUS */}
-      <section className="card overflow-hidden rounded-xl border border-teal/40">
-        <h2 className="border-b border-teal/30 bg-[#202624] px-4 py-3 font-bold text-accent">
-          Weighbridge Device Status
-        </h2>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1900px] border-collapse">
-            <thead>
-              <tr>
-                <TableHeader>Sno</TableHeader>
-                <TableHeader>Location</TableHeader>
-                <TableHeader>Reader-1 IP</TableHeader>
-                <TableHeader>Reader-1 Status</TableHeader>
-                <TableHeader>Reader-2 IP</TableHeader>
-                <TableHeader>Reader-2 Status</TableHeader>
-                <TableHeader>Display-1 IP</TableHeader>
-                <TableHeader>Display-1 Status</TableHeader>
-                <TableHeader>Display-2 IP</TableHeader>
-                <TableHeader>Display-2 Status</TableHeader>
-                <TableHeader>WB Indicator IP</TableHeader>
-                <TableHeader>WB Indicator Status</TableHeader>
-                <TableHeader>WB Controller IP</TableHeader>
-                <TableHeader>WB Controller Status</TableHeader>
-              </tr>
-            </thead>
-
-            <tbody>
-              {wbLoading && weighbridges.length === 0 ? (
-                <tr>
-                  <td colSpan={14} className="p-5 text-center text-muted">
-                    Loading weighbridge devices...
-                  </td>
-                </tr>
-              ) : weighbridges.length === 0 ? (
-                <tr>
-                  <td colSpan={14} className="p-5 text-center text-muted">
-                    No weighbridges configured for this plant.
-                  </td>
-                </tr>
-              ) : (
-                weighbridges.map((wb, index) => {
-                  const d = wb.data;
-
-                  return (
-                    <tr
-                      key={wb.WBID}
-                      className="border-t border-white/10 hover:bg-white/5"
-                    >
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{wb.LOCNAME}</TableCell>
-
-                      <TableCell>{valueOrDash(d?.RFID1IP)}</TableCell>
-                      <TableCell><Health value={d?.RF1STAT} /></TableCell>
-
-                      <TableCell>{valueOrDash(d?.RFID2IP)}</TableCell>
-                      <TableCell><Health value={d?.RF2STAT} /></TableCell>
-
-                      <TableCell>{valueOrDash(d?.WB1DSPIP)}</TableCell>
-                      <TableCell><Health value={d?.WB1DSPSTAT} /></TableCell>
-
-                      <TableCell>
-                        {valueOrDash(d?.WB2DSPIP ?? d?.["WB2DSPIP  "])}
-                      </TableCell>
-                      <TableCell><Health value={d?.WB2DSPSTAT} /></TableCell>
-
-                      <TableCell>{valueOrDash(d?.WBINDIP)}</TableCell>
-                      <TableCell><Health value={d?.WBINDSTAT} /></TableCell>
-
-                      <TableCell>{valueOrDash(d?.WBCTRIP)}</TableCell>
-                      <TableCell><Health value={d?.WBCTRSTAT} /></TableCell>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      {loading && !result ? (
+        <div className="rounded-xl border bg-white p-10 text-center text-gray-500">
+          Loading device status...
         </div>
-      </section>
-    </main>
+      ) : result ? (
+        <>
+          <TableContainer
+            title="Gate Devices"
+            error={result.gate.error}
+            empty={result.gate.data.length === 0}
+          >
+            <GateTable devices={result.gate.data} />
+          </TableContainer>
+
+          <TableContainer
+            title="Automatic Weighbridge Devices"
+            error={result.automaticWB.error}
+            empty={result.automaticWB.data.length === 0}
+          >
+            <WBTable devices={result.automaticWB.data} />
+          </TableContainer>
+
+          <TableContainer
+            title="Bulker Weighbridge Devices"
+            error={result.bulkerWB.error}
+            empty={result.bulkerWB.data.length === 0}
+          >
+            <WBTable devices={result.bulkerWB.data} />
+          </TableContainer>
+        </>
+      ) : (
+        <div className="rounded-xl border bg-white p-10 text-center text-gray-500">
+          Unable to retrieve device information.
+        </div>
+      )}
+    </div>
   );
 }
