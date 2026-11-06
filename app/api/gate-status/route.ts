@@ -1,25 +1,66 @@
-import WebSocket from "ws";
-import { getSession, getPlant } from "@/lib/plant";
+
+import { getSession, getGatePool } from "@/lib/plant";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   const id = Number(new URL(req.url).searchParams.get("id"));
-  const s = await getSession();
-  if (!s || !(id > 0))
-    return Response.json({ error: true, SID: id, message: "Invalid request" }, { status: 400 });
+
+  // 1. Validate request
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return Response.json(
+      { success: false, message: "Invalid gate ID." },
+      { status: 400 }
+    );
+  }
+
   try {
-    const plant = await getPlant(s);
-    if (!plant?.truckRegIP) throw new Error("Truck registration IP not set");
-    const data = await new Promise<string>((resolve, reject) => {
-      const ws = new WebSocket(`ws://${plant.truckRegIP}:4488`, { handshakeTimeout: 4000 });
-      const t = setTimeout(() => { ws.terminate(); reject(new Error("Socket timeout")); }, 10000);
-      ws.on("open", () => ws.send(JSON.stringify([id])));
-      ws.on("message", (m) => { clearTimeout(t); ws.close(); resolve(m.toString()); });
-      ws.on("error", (e) => { clearTimeout(t); reject(e); });
+    // 2. Validate session
+    const session = await getSession();
+
+    if (!session) {
+      return Response.json(
+        { success: false, message: "Your session has expired. Please log in again." },
+        { status: 401 }
+      );
+    }
+
+    // 3. Get database connection
+    const pool = await getGatePool(session);
+
+    // 4. Fetch latest 60 records
+    const [rows] = await pool.query(
+      `SELECT STAGE, RFNO, TRUCKNO, RESPONSE, UPDATETIME
+       FROM gaterfdatatbl
+       WHERE ID = ?
+       ORDER BY UPDATETIME DESC
+       LIMIT 60`,
+      [id]
+    );
+
+    // 5. Successful response (even when no records exist)
+    return Response.json(rows, {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store"
+      }
     });
-    return new Response(data, { headers: { "Content-Type": "application/json" } });
-  } catch (e) {
-    return Response.json({ error: true, SID: id, message: (e as Error).message }, { status: 500 });
+
+  } catch (error) {
+    // 6. Log detailed error on server only
+    console.error("[GATE RECORDS API ERROR]", {
+      gateId: id,
+      error
+    });
+
+    // 7. Return safe error to frontend
+    return Response.json(
+      {
+        success: false,
+        message: "Unable to load gate records. Please try again later."
+      },
+      { status: 500 }
+    );
   }
 }
