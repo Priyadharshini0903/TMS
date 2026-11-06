@@ -14,7 +14,7 @@ export async function getSession(): Promise<Session | null> {
 export async function getPlant(s: Session) {
   const [rows] = await db.query<RowDataPacket[]>(
     "SELECT * FROM VersionTbl_qa WHERE Plantcode = ? AND tmpDelete = 0 ORDER BY Plantcode ASC",
-    [s.plantCode]
+    [s.plantCode],
   );
   return rows[0] ?? null;
 }
@@ -26,7 +26,7 @@ export async function getGatePool(s: Session) {
   if (hit) return hit;
   const [r] = await db.query<RowDataPacket[]>(
     "SELECT * FROM plant_db_settings WHERE shortPlantCode = ? AND tmpDelete = 0 LIMIT 1",
-    [s.plantId]
+    [s.plantId],
   );
   const c = r[0];
   if (!c) throw new Error("Plant DB settings not found");
@@ -49,7 +49,23 @@ export async function getGates(s: Session) {
   const special = ["3300", "3307"].includes(s.plantCode); // same LCW1/LCW2 rule as PHP
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT SID, LOCATION FROM gaterfconfig WHERE ${special ? "PLANTID" : "PLANTCODE"} = ? ORDER BY SID ASC`,
-    [special ? s.plantCode : s.plantId]
+    [special ? s.plantCode : s.plantId],
   );
   return rows as { SID: number; LOCATION: string }[];
+}
+export type Weighbridge = {
+  WBID: number;
+  [key: string]: unknown;
+};
+
+export async function getWeighbridges(s: Session) {
+  const [rows] = await db.query<RowDataPacket[]>(
+    `SELECT *
+     FROM wbipconfig
+     WHERE PlantCode = ?
+     ORDER BY WBID ASC`,
+    [s.plantId]
+  );
+
+  return rows as Weighbridge[];
 }
