@@ -1,18 +1,6 @@
 
 import mysql from "mysql2/promise";
 
-<<<<<<< HEAD
-const g = globalThis as unknown as { pool?: mysql.Pool };
-console.log("ENV CHECK:", process.env.MYSQL_HOST, process.env.MYSQL_USER, !!process.env.MYSQL_PASSWORD);
-export const db =
-  g.pool ??
-  (g.pool = mysql.createPool({
-    host: process.env.MYSQL_HOST,
-    port: Number(process.env.MYSQL_PORT ?? 3306),
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE,
-=======
 const globalForMySQL = globalThis as typeof globalThis & {
   mysqlPool?: mysql.Pool;
 };
@@ -43,7 +31,6 @@ function createDatabasePool(): mysql.Pool {
     database,
 
     waitForConnections: true,
->>>>>>> origin/admin
     connectionLimit: 5,
     queueLimit: 10,
     connectTimeout: 5000,

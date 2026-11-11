@@ -40,16 +40,11 @@ export async function getPlant(s: Session) {
   }
 
   const [rows] = await db.query<RowDataPacket[]>(
-<<<<<<< HEAD
-    "SELECT * FROM VersionTbl_qa WHERE Plantcode = ? AND tmpDelete = 0 ORDER BY Plantcode ASC",
-    [s.plantCode],
-=======
     `SELECT *
      FROM VersionTbl_qa
      WHERE Plantcode = ? AND tmpDelete = 0
      ORDER BY Plantcode ASC`,
     [s.plantCode]
->>>>>>> origin/admin
   );
 
   return rows[0] ?? null;
@@ -60,14 +55,6 @@ export async function getGatePool(s: Session): Promise<mysql.Pool> {
     throw new Error("Invalid plant ID");
   }
 
-<<<<<<< HEAD
-export async function getGatePool(s: Session) {
-  const hit = pools.get(s.plantId);
-  if (hit) return hit;
-  const [r] = await db.query<RowDataPacket[]>(
-    "SELECT * FROM plant_db_settings WHERE shortPlantCode = ? AND tmpDelete = 0 LIMIT 1",
-    [s.plantId],
-=======
   // Return the existing pool when available.
   const existingPool = pools.get(s.plantId);
 
@@ -82,7 +69,6 @@ export async function getGatePool(s: Session) {
      WHERE shortPlantCode = ? AND tmpDelete = 0
      LIMIT 1`,
     [s.plantId]
->>>>>>> origin/admin
   );
 
   const config = rows[0];
@@ -136,21 +122,15 @@ export async function getGates(s: Session) {
   const special = ["3300", "3307"].includes(s.plantCode);
 
   const [rows] = await pool.query<RowDataPacket[]>(
-<<<<<<< HEAD
-    `SELECT SID, LOCATION FROM gaterfconfig WHERE ${special ? "PLANTID" : "PLANTCODE"} = ? ORDER BY SID ASC`,
-    [special ? s.plantCode : s.plantId],
-=======
     `SELECT SID, LOCATION
      FROM gaterfconfig
      WHERE ${special ? "PLANTID" : "PLANTCODE"} = ?
      ORDER BY SID ASC`,
     [special ? s.plantCode : s.plantId]
->>>>>>> origin/admin
   );
 
   return rows as { SID: number; LOCATION: string }[];
 }
-<<<<<<< HEAD
 export type Weighbridge = {
   WBID: number;
   [key: string]: unknown;
@@ -167,5 +147,3 @@ export async function getWeighbridges(s: Session) {
 
   return rows as Weighbridge[];
 }
-=======
->>>>>>> origin/admin
