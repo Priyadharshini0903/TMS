@@ -30,13 +30,8 @@ function isHealthy(value: unknown): boolean | null {
 
   const v = String(value).toLowerCase().trim();
 
-  if (["1", "true", "healthy", "online", "connected"].includes(v)) {
-    return true;
-  }
-
-  if (["0", "false", "unhealthy", "offline", "disconnected"].includes(v)) {
-    return false;
-  }
+  if (["1", "true", "healthy", "online", "connected"].includes(v)) return true;
+  if (["0", "false", "unhealthy", "offline", "disconnected"].includes(v)) return false;
 
   return null;
 }
@@ -53,11 +48,35 @@ function Health({ value }: { value: unknown }) {
       <span className={healthy ? "text-green-400" : "text-red-400"}>
         {healthy ? "Healthy" : "Network Issue"}
       </span>
-      <span
-        className={`h-4 w-4 rounded-sm ${
-          healthy ? "bg-green-500" : "bg-red-500"
-        }`}
-      />
+      <span className={`h-3 w-3 rounded-sm ${healthy ? "bg-green-500" : "bg-red-500"}`} />
+    </span>
+  );
+}
+
+function ConnectionBadge({
+  label,
+  connected,
+}: {
+  label: string;
+  connected: boolean | null;
+}) {
+  const styles =
+    connected === null
+      ? "border-white/10 bg-white/5 text-gray-400"
+      : connected
+        ? "border-green-500/30 bg-green-500/10 text-green-400"
+        : "border-red-500/30 bg-red-500/10 text-red-400";
+
+  return (
+    <span className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold ${styles}`}>
+      <span className={`h-2 w-2 rounded-full ${
+        connected === null
+          ? "bg-gray-500 animate-pulse"
+          : connected
+            ? "bg-green-500"
+            : "bg-red-500"
+      }`} />
+      {label}: {connected === null ? "Connecting..." : connected ? "Connected" : "Disconnected"}
     </span>
   );
 }
@@ -73,9 +92,7 @@ function valueOrDash(value: unknown) {
 function parseControllerResponse(raw: unknown, id: number): DeviceData {
   let outer: unknown = raw;
 
-  if (typeof outer === "string") {
-    outer = JSON.parse(outer);
-  }
+  if (typeof outer === "string") outer = JSON.parse(outer);
 
   let inner: unknown = outer;
 
@@ -84,15 +101,21 @@ function parseControllerResponse(raw: unknown, id: number): DeviceData {
     inner = record[String(id)] ?? record[id] ?? outer;
   }
 
-  if (typeof inner === "string") {
-    inner = JSON.parse(inner);
-  }
+  if (typeof inner === "string") inner = JSON.parse(inner);
 
   if (!inner || typeof inner !== "object" || Array.isArray(inner)) {
     throw new Error("Invalid controller response");
   }
 
   return inner as DeviceData;
+}
+
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between border-b border-teal/30 bg-[#202624] px-4 py-3">
+      <h2 className="font-bold text-accent">{children}</h2>
+    </div>
+  );
 }
 
 function TableHeader({ children }: { children: React.ReactNode }) {
@@ -111,16 +134,42 @@ function TableCell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function EmptyRow({
+  columns,
+  title,
+  description,
+  disconnected = false,
+}: {
+  columns: number;
+  title: string;
+  description?: string;
+  disconnected?: boolean;
+}) {
+  return (
+    <tr>
+      <td colSpan={columns} className="px-4 py-8 text-center">
+        <div className="flex flex-col items-center gap-2">
+          <span className={`text-sm font-semibold ${disconnected ? "text-red-400" : "text-gray-400"}`}>
+            {title}
+          </span>
+          {description && (
+            <span className="text-xs text-gray-500">{description}</span>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export default function DeviceStatus() {
   const [gateRows, setGateRows] = useState<GateRow[]>([]);
   const [gateConnection, setGateConnection] = useState<boolean | null>(null);
 
   const [weighbridges, setWeighbridges] = useState<WBRow[]>([]);
   const [wbConnection, setWbConnection] = useState<boolean | null>(null);
-
   const [wbLoading, setWbLoading] = useState(true);
 
-  // GATE DEVICE STATUS - existing PHP equivalent, 7-second polling
+  // GATE STATUS
   useEffect(() => {
     let alive = true;
     let timer: ReturnType<typeof setTimeout>;
@@ -140,18 +189,17 @@ export default function DeviceStatus() {
         if (!Array.isArray(data)) throw new Error("Invalid gate response");
 
         if (alive) {
-          setGateRows(data);
-          setGateConnection(true);
-        }
+              console.log("GATE STATUS API RESPONSE:", data);
+
+              setGateRows(data);
+              setGateConnection(data.length > 0);
+            }
       } catch {
         if (alive) setGateConnection(false);
       }
 
       if (alive) {
-        timer = setTimeout(
-          poll,
-          Math.max(0, 7000 - (Date.now() - start))
-        );
+        timer = setTimeout(poll, Math.max(0, 7000 - (Date.now() - start)));
       }
     };
 
@@ -163,7 +211,7 @@ export default function DeviceStatus() {
     };
   }, []);
 
-  // WEIGHBRIDGE DEVICE STATUS - reuse the existing TCP API
+  // WEIGHBRIDGE STATUS
   const fetchWeighbridgeStatus = useCallback(async () => {
     setWbLoading(true);
 
@@ -194,7 +242,7 @@ export default function DeviceStatus() {
               try {
                 message = JSON.parse(raw).message ?? message;
               } catch {
-                // Keep fallback message.
+                // Use fallback message.
               }
 
               throw new Error(message);
@@ -222,7 +270,6 @@ export default function DeviceStatus() {
       );
 
       setWeighbridges(results);
-
       setWbConnection(
         results.length > 0 && results.some((row) => row.data !== null)
       );
@@ -242,9 +289,7 @@ export default function DeviceStatus() {
     const poll = async () => {
       await fetchWeighbridgeStatus();
 
-      if (alive) {
-        timer = setTimeout(poll, 7000);
-      }
+      if (alive) timer = setTimeout(poll, 7000);
     };
 
     void poll();
@@ -258,46 +303,28 @@ export default function DeviceStatus() {
   return (
     <main className="min-w-0 space-y-6 p-4">
       {/* PAGE HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold italic text-accent">
-          DEVICE STATUS
-        </h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold italic tracking-wide text-accent">
+            DEVICE STATUS
+          </h1>
+          <p className="mt-1 text-xs text-gray-500">
+            Live monitoring of gate and weighbridge devices
+          </p>
+        </div>
 
-        <div className="flex flex-wrap gap-2 text-xs font-semibold">
-          <span
-            className={`rounded px-3 py-2 ${
-              gateConnection === null
-                ? "bg-white/10 text-gray-400"
-                : gateConnection
-                ? "bg-green-500/15 text-green-400"
-                : "bg-red-500/15 text-red-400"
-            }`}
-          >
-            Gate: {gateConnection === null ? "Connecting..." : gateConnection ? "Connected" : "Disconnected"}
-          </span>
-
-          <span
-            className={`rounded px-3 py-2 ${
-              wbConnection === null
-                ? "bg-white/10 text-gray-400"
-                : wbConnection
-                ? "bg-green-500/15 text-green-400"
-                : "bg-red-500/15 text-red-400"
-            }`}
-          >
-            Weighbridge: {wbLoading && wbConnection === null ? "Connecting..." : wbConnection ? "Connected" : "Disconnected"}
-          </span>
+        <div className="flex flex-wrap gap-2">
+          <ConnectionBadge label="Gate" connected={gateConnection} />
+          <ConnectionBadge label="Weighbridge" connected={wbConnection} />
         </div>
       </div>
 
       {/* GATE DEVICE STATUS */}
-      <section className="card overflow-hidden rounded-xl border border-teal/40">
-        <h2 className="border-b border-teal/30 bg-[#202624] px-4 py-3 font-bold text-accent">
-          Gate Device Status
-        </h2>
+      <section className="card overflow-hidden rounded-xl border border-teal/40 shadow-lg shadow-black/20">
+        <SectionHeader>Gate Device Status</SectionHeader>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px] border-collapse text-left">
+          <table className="w-full min-w-[850px] border-collapse">
             <thead>
               <tr>
                 <TableHeader>Sno</TableHeader>
@@ -310,19 +337,25 @@ export default function DeviceStatus() {
             </thead>
 
             <tbody>
-              {gateRows.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-5 text-center text-muted">
-                    {gateConnection === false
-                      ? "Unable to retrieve gate device information."
-                      : "Loading gate devices..."}
-                  </td>
-                </tr>
-              ) : (
-                gateRows.map((row, index) => (
+             {gateRows.length === 0 ? (
+  <EmptyRow
+    columns={6}
+    title={
+      gateConnection === null
+        ? "Loading gate devices..."
+        : gateConnection === false
+          ? "No gate device records received"
+          : "No gate devices configured"
+    }
+    disconnected={gateConnection === false}
+  />
+) : (
+  gateRows.map((row, index) => (
+    // Keep your existing row JSX here
+
                   <tr
                     key={`${row.LOCATION ?? "gate"}-${index}`}
-                    className="border-t border-white/10 hover:bg-white/5"
+                    className="border-t border-white/10 transition-colors hover:bg-teal/5"
                   >
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{valueOrDash(row.LOCATION)}</TableCell>
@@ -339,10 +372,8 @@ export default function DeviceStatus() {
       </section>
 
       {/* WEIGHBRIDGE DEVICE STATUS */}
-      <section className="card overflow-hidden rounded-xl border border-teal/40">
-        <h2 className="border-b border-teal/30 bg-[#202624] px-4 py-3 font-bold text-accent">
-          Weighbridge Device Status
-        </h2>
+      <section className="card overflow-hidden rounded-xl border border-teal/40 shadow-lg shadow-black/20">
+        <SectionHeader>Weighbridge Device Status</SectionHeader>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1900px] border-collapse">
@@ -367,17 +398,22 @@ export default function DeviceStatus() {
 
             <tbody>
               {wbLoading && weighbridges.length === 0 ? (
-                <tr>
-                  <td colSpan={14} className="p-5 text-center text-muted">
-                    Loading weighbridge devices...
-                  </td>
-                </tr>
+                <EmptyRow columns={14} title="Loading weighbridge devices..." />
               ) : weighbridges.length === 0 ? (
-                <tr>
-                  <td colSpan={14} className="p-5 text-center text-muted">
-                    No weighbridges configured for this plant.
-                  </td>
-                </tr>
+                <EmptyRow
+                  columns={14}
+                  title={
+                    wbConnection === false
+                      ? "Unable to connect to weighbridge server"
+                      : "No weighbridges configured for this plant"
+                  }
+                  description={
+                    wbConnection === false
+                      ? "Connection failed. Waiting for the next retry."
+                      : undefined
+                  }
+                  disconnected={wbConnection === false}
+                />
               ) : (
                 weighbridges.map((wb, index) => {
                   const d = wb.data;
@@ -385,30 +421,43 @@ export default function DeviceStatus() {
                   return (
                     <tr
                       key={wb.WBID}
-                      className="border-t border-white/10 hover:bg-white/5"
+                      className="border-t border-white/10 transition-colors hover:bg-teal/5"
                     >
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{wb.LOCNAME}</TableCell>
 
-                      <TableCell>{valueOrDash(d?.RFID1IP)}</TableCell>
-                      <TableCell><Health value={d?.RF1STAT} /></TableCell>
+                      {d ? (
+                        <>
+                          <TableCell>{valueOrDash(d.RFID1IP)}</TableCell>
+                          <TableCell><Health value={d.RF1STAT} /></TableCell>
 
-                      <TableCell>{valueOrDash(d?.RFID2IP)}</TableCell>
-                      <TableCell><Health value={d?.RF2STAT} /></TableCell>
+                          <TableCell>{valueOrDash(d.RFID2IP)}</TableCell>
+                          <TableCell><Health value={d.RF2STAT} /></TableCell>
 
-                      <TableCell>{valueOrDash(d?.WB1DSPIP)}</TableCell>
-                      <TableCell><Health value={d?.WB1DSPSTAT} /></TableCell>
+                          <TableCell>{valueOrDash(d.WB1DSPIP)}</TableCell>
+                          <TableCell><Health value={d.WB1DSPSTAT} /></TableCell>
 
-                      <TableCell>
-                        {valueOrDash(d?.WB2DSPIP ?? d?.["WB2DSPIP  "])}
-                      </TableCell>
-                      <TableCell><Health value={d?.WB2DSPSTAT} /></TableCell>
+                          <TableCell>
+                            {valueOrDash(d.WB2DSPIP ?? d["WB2DSPIP  "])}
+                          </TableCell>
+                          <TableCell><Health value={d.WB2DSPSTAT} /></TableCell>
 
-                      <TableCell>{valueOrDash(d?.WBINDIP)}</TableCell>
-                      <TableCell><Health value={d?.WBINDSTAT} /></TableCell>
+                          <TableCell>{valueOrDash(d.WBINDIP)}</TableCell>
+                          <TableCell><Health value={d.WBINDSTAT} /></TableCell>
 
-                      <TableCell>{valueOrDash(d?.WBCTRIP)}</TableCell>
-                      <TableCell><Health value={d?.WBCTRSTAT} /></TableCell>
+                          <TableCell>{valueOrDash(d.WBCTRIP)}</TableCell>
+                          <TableCell><Health value={d.WBCTRSTAT} /></TableCell>
+                        </>
+                      ) : (
+                        <td colSpan={12} className="border border-white/10 px-4 py-3 text-center">
+                          <span className="text-sm font-semibold text-red-400">
+                            Connection failed
+                          </span>
+                          <span className="ml-2 text-xs text-gray-500">
+                            {wb.error ?? "No response from controller"}
+                          </span>
+                        </td>
+                      )}
                     </tr>
                   );
                 })
@@ -417,6 +466,9 @@ export default function DeviceStatus() {
           </table>
         </div>
       </section>
+
+      {/* BULKER DEVICE STATUS
+          UI section only. Connect it to Bulker data when its API is ready. */}
     </main>
   );
 }
