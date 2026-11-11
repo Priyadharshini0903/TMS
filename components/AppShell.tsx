@@ -76,23 +76,23 @@ export default function AppShell({ plantId, plantCode, mode, truckReg, autoWb, r
           {toggle("Report(s)", rep, setRep)}
           {rep && (
             <div className="ml-3 space-y-1 border-l border-teal/40 pl-2">
-              {item("/reports/location", "Location Report")}
-              {autoWb && item("/reports/weighbridge", "Weighbridge Report")}
-              {raw && item("/reports/raw-weighbridge", "Raw Weighbridge Report")}
+              {item("/Reports/location-wise-report", "Location Report")}
+              {autoWb && item("/Reports/weighbridge-wise-report", "Weighbridge Report")}
+              {raw && item("/Reports/raw-wb-wise-report", "Raw Weighbridge Report")}
               {bulker && (
                 <>
                   {toggle("Bulker Report(s)", brep, setBrep)}
                   {brep && (
                     <div className="ml-3 space-y-1 border-l border-teal/40 pl-2">
-                      {item("/reports/bulker", "Bulker Report")}
-                      {item("/reports/bulker-weight", "Bulker Weight Report")}
+                      {item("/Reports/bulker-wise-report", "Bulker Report")}
+                      {item("/Reports/wb-wise-report", "Bulker Weight Report")}
                     </div>
                   )}
                 </>
               )}
-              {item("/reports/api-logs", "APILogs Report")}
-              {item("/reports/rfid-sense", "RFID Sense Report")}
-              {item("/reports/transaction-logs", "Transaction Logs Report")}
+              {item("/Reports/api-logs-report", "APILogs Report")}
+              {item("/Reports/rfid-sense-report", "RFID Sense Report")}
+              {item("/Reports/transaction-logs-report", "Transaction Logs Report")}
             </div>
           )}
 
