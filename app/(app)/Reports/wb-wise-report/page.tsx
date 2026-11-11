@@ -1,86 +1,156 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type ReportRow = {
-  sno: number;
-  weighbridge: string;
-  truckNo: string;
-  rfidNo: string;
-  grossWeight: number;
-  tareWeight: number;
-  netWeight: number;
-  transactionDate: string;
-  transactionTime: string;
-  status: string;
+type WeighbridgeOption = {
+  WBID: number;
+  LOCNAME: string;
 };
 
-const mockData: ReportRow[] = [
-  { sno: 1, weighbridge: "WB-1", truckNo: "TN09AB1234", rfidNo: "RF10001", grossWeight: 42500, tareWeight: 14500, netWeight: 28000, transactionDate: "2026-11-07", transactionTime: "08:15:20", status: "Success" },
-  { sno: 2, weighbridge: "WB-2", truckNo: "TN10CD5678", rfidNo: "RF10002", grossWeight: 38200, tareWeight: 13200, netWeight: 25000, transactionDate: "2026-11-07", transactionTime: "08:25:40", status: "Success" },
-  { sno: 3, weighbridge: "WB-1", truckNo: "AP05EF9012", rfidNo: "RF10003", grossWeight: 41000, tareWeight: 14000, netWeight: 27000, transactionDate: "2026-11-07", transactionTime: "09:10:12", status: "Success" },
-  { sno: 4, weighbridge: "WB-3", truckNo: "TN22GH3456", rfidNo: "RF10004", grossWeight: 39800, tareWeight: 13800, netWeight: 26000, transactionDate: "2026-11-07", transactionTime: "09:45:10", status: "Pending" },
-  { sno: 5, weighbridge: "WB-2", truckNo: "KA03JK7890", rfidNo: "RF10005", grossWeight: 43500, tareWeight: 15500, netWeight: 28000, transactionDate: "2026-11-06", transactionTime: "10:05:32", status: "Success" },
-  { sno: 6, weighbridge: "WB-1", truckNo: "TN09LM1122", rfidNo: "RF10006", grossWeight: 40200, tareWeight: 14200, netWeight: 26000, transactionDate: "2026-11-06", transactionTime: "11:15:20", status: "Success" },
-];
-
-export default function WbWiseReportPage() {
-  const [date, setDate] = useState("2026-11-07");
-  const [weighbridge, setWeighbridge] = useState("ALL");
-  const [status, setStatus] = useState("ALL");
-  const [rows, setRows] = useState<ReportRow[]>([]);
-  const [searched, setSearched] = useState(false);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+type ReportRow = {
+  WBID: number;
+  RFNO: string | null;
+  TRUCKNO: string | null;
+  WEIGHT: number | null;
+  STATUS: string | null;
+  DatTim: string | null;
+  Center_Position: string | null;
+  RfCard_Detect: string | null;
+  EligibleSend: string | null;
+  EligibleReply: string | null;
+  StableCnt_Start: string | null;
+  StableCnt_End: string | null;
+  WeightService_Send: string | null;
+  WeighService_End: string | null;
+  TimeDifferenceFormatted: string | null;
+};
 
 const headers = [
   "SNO",
   "WEIGHBRIDGE",
-  "TRUCK NO",
   "RFID NO",
-  "GROSS WEIGHT",
-  "TARE WEIGHT",
-  "NET WEIGHT",
-  "DATE",
-  "TIME",
+  "TRUCK NO",
+  "WEIGHT",
   "STATUS",
+  "RESPONSE TIMESTAMP",
+  "CENTER POSITION",
+  "RF CARD DETECT",
+  "ELIGIBLE SEND",
+  "ELIGIBLE REPLY",
+  "STABLE COUNT START",
+  "STABLE COUNT END",
+  "WEIGHT SERVICE SEND",
+  "WEIGH SERVICE END",
+  "TIME DIFFERENCE",
 ];
 
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) =>
-        Object.values(row).some((value) =>
-          String(value).toLowerCase().includes(search.toLowerCase())
-        )
-      ),
-    [rows, search]
+export default function WbWiseReportPage() {
+  const [date, setDate] = useState(
+    new Date().toISOString().split("T")[0]
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const [weighbridges, setWeighbridges] = useState<WeighbridgeOption[]>([]);
+  const [weighbridge, setWeighbridge] = useState("ALL");
 
-  const paginatedRows = filteredRows.slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
+  const [rows, setRows] = useState<ReportRow[]>([]);
+  const [searched, setSearched] = useState(false);
+  const [search, setSearch] = useState("");
 
-  function getData() {
-    let result = mockData.filter((row) => row.transactionDate === date);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-    if (weighbridge !== "ALL") {
-      result = result.filter((row) => row.weighbridge === weighbridge);
+  const [loading, setLoading] = useState(false);
+  const [dropdownLoading, setDropdownLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadWeighbridges() {
+      try {
+        const response = await fetch("/api/reports/wb-wise");
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Unable to load weighbridges.");
+        }
+
+        setWeighbridges(result.data || []);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Unable to load weighbridges."
+        );
+      } finally {
+        setDropdownLoading(false);
+      }
     }
 
-    if (status !== "ALL") {
-      result = result.filter((row) => row.status === status);
+    loadWeighbridges();
+  }, []);
+
+  const getData = async () => {
+    if (!date || !weighbridge) {
+      setError("Please select a date and weighbridge.");
+      return;
     }
 
-    setRows(result);
-    setSearched(true);
+    setLoading(true);
+    setError("");
+    setRows([]);
     setSearch("");
     setPage(1);
-  }
+    setSearched(true);
+
+    try {
+      const response = await fetch("/api/reports/wb-wise", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date,
+          weighbridge,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to generate report.");
+      }
+
+      setRows(result.data || []);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Something went wrong."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredRows = useMemo(() => {
+    const query = search.toLowerCase();
+
+    if (!query) return rows;
+
+    return rows.filter((row) =>
+      Object.values(row).some((value) =>
+        String(value ?? "").toLowerCase().includes(query)
+      )
+    );
+  }, [rows, search]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredRows.length / pageSize)
+  );
+
+  const currentPage = Math.min(page, totalPages);
+
+  const paginatedRows = filteredRows.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   function exportExcel() {
     if (!filteredRows.length) {
@@ -88,28 +158,35 @@ const headers = [
       return;
     }
 
-    const headers = [
-      "SNO", "WEIGHBRIDGE", "TRUCK NO", "RFID NO",
-      "GROSS WEIGHT", "TARE WEIGHT", "NET WEIGHT",
-      "DATE", "TIME", "STATUS",
+    const csvRows = [
+      headers,
+      ...filteredRows.map((row, index) => [
+        index + 1,
+        `WB-${row.WBID}`,
+        row.RFNO,
+        row.TRUCKNO,
+        row.WEIGHT,
+        row.STATUS,
+        row.DatTim,
+        row.Center_Position,
+        row.RfCard_Detect,
+        row.EligibleSend,
+        row.EligibleReply,
+        row.StableCnt_Start,
+        row.StableCnt_End,
+        row.WeightService_Send,
+        row.WeighService_End,
+        row.TimeDifferenceFormatted,
+      ]),
     ];
 
-    const csvRows = filteredRows.map((row, index) => [
-      index + 1,
-      row.weighbridge,
-      row.truckNo,
-      row.rfidNo,
-      row.grossWeight,
-      row.tareWeight,
-      row.netWeight,
-      row.transactionDate,
-      row.transactionTime,
-      row.status,
-    ]);
-
-    const csv = [headers, ...csvRows]
+    const csv = csvRows
       .map((row) =>
-        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+        row
+          .map((value) =>
+            `"${String(value ?? "").replace(/"/g, '""')}"`
+          )
+          .join(",")
       )
       .join("\r\n");
 
@@ -119,9 +196,11 @@ const headers = [
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
+
     link.href = url;
     link.download = "WBWiseReport.csv";
     link.click();
+
     URL.revokeObjectURL(url);
   }
 
@@ -166,98 +245,300 @@ const headers = [
   const td: React.CSSProperties = {
     padding: 12,
     textAlign: "center",
-    fontSize: 13,
+    fontSize: 12,
     color: "#ffffff",
     borderBottom: "1px solid #303030",
     whiteSpace: "nowrap",
   };
 
   return (
-    <div style={{ padding: 24, background: "#050505", minHeight: "100vh", color: "#ffffff" }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: "#a8e6d9", marginBottom: 24 }}>
+    <div
+      style={{
+        padding: 24,
+        background: "#050505",
+        minHeight: "100vh",
+        color: "#ffffff",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: 22,
+          fontWeight: 800,
+          color: "#a8e6d9",
+          marginBottom: 24,
+        }}
+      >
         WB WISE REPORT
       </h1>
 
+      {/* Filters */}
       <div style={card}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 20 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+            gap: 20,
+          }}
+        >
           <div>
-            <label style={{ display: "block", marginBottom: 8, color: "#cfd4d2", fontSize: 13 }}>Select Date *</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={input} />
+            <label
+              style={{
+                display: "block",
+                marginBottom: 8,
+                color: "#cfd4d2",
+                fontSize: 13,
+              }}
+            >
+              Select Date *
+            </label>
+
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              style={input}
+            />
           </div>
 
           <div>
-            <label style={{ display: "block", marginBottom: 8, color: "#cfd4d2", fontSize: 13 }}>Weighbridge *</label>
-            <select value={weighbridge} onChange={(e) => setWeighbridge(e.target.value)} style={input}>
-              <option value="ALL">ALL</option>
-              <option value="WB-1">WB-1</option>
-              <option value="WB-2">WB-2</option>
-              <option value="WB-3">WB-3</option>
-            </select>
-          </div>
+            <label
+              style={{
+                display: "block",
+                marginBottom: 8,
+                color: "#cfd4d2",
+                fontSize: 13,
+              }}
+            >
+              Weighbridge *
+            </label>
 
-          <div>
-            <label style={{ display: "block", marginBottom: 8, color: "#cfd4d2", fontSize: 13 }}>Status</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} style={input}>
+            <select
+              value={weighbridge}
+              onChange={(e) => setWeighbridge(e.target.value)}
+              style={input}
+              disabled={dropdownLoading}
+            >
               <option value="ALL">ALL</option>
-              <option value="Success">Success</option>
-              <option value="Pending">Pending</option>
-              <option value="Failed">Failed</option>
+
+              {weighbridges.map((wb) => (
+                <option key={wb.WBID} value={wb.WBID}>
+                  {wb.LOCNAME}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
-        <button onClick={getData} style={{ ...button, marginTop: 22 }}>Get Data</button>
+        <button
+          onClick={getData}
+          disabled={loading || dropdownLoading}
+          style={{
+            ...button,
+            marginTop: 22,
+            opacity: loading || dropdownLoading ? 0.6 : 1,
+          }}
+        >
+          {loading ? "Please wait..." : "Get Data"}
+        </button>
       </div>
 
+      {error && (
+        <div
+          style={{
+            background: "#401c1c",
+            color: "#ff9999",
+            padding: 14,
+            borderRadius: 8,
+            marginBottom: 18,
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* Report */}
       {searched && (
         <div style={card}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-            <h2 style={{ fontSize: 17, color: "#a8e6d9", fontWeight: 700 }}>Report Details</h2>
-            <button onClick={exportExcel} style={button}>Export Excel</button>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap",
+              marginBottom: 20,
+            }}
+          >
+            <h2
+              style={{
+                fontSize: 17,
+                color: "#a8e6d9",
+                fontWeight: 700,
+              }}
+            >
+              Report Details
+            </h2>
+
+            <button
+              onClick={exportExcel}
+              disabled={!filteredRows.length}
+              style={{
+                ...button,
+                opacity: filteredRows.length ? 1 : 0.5,
+              }}
+            >
+              Export Excel
+            </button>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
-            <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ ...input, width: 100 }}>
-              {[5, 10, 15, 20, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap",
+              marginBottom: 16,
+            }}
+          >
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              style={{ ...input, width: 110 }}
+            >
+              {[5, 10, 15, 20, 50, 70, 100].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
             </select>
-            <input placeholder="Search report..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} style={{ ...input, width: 260 }} />
+
+            <input
+              placeholder="Search report..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              style={{ ...input, width: 260 }}
+            />
           </div>
 
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1100 }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                minWidth: 1800,
+              }}
+            >
               <thead>
                 <tr>
-                  {headers.map((heading) => <th key={heading} style={th}>{heading}</th>)}
+                  {headers.map((heading) => (
+                    <th key={heading} style={th}>
+                      {heading}
+                    </th>
+                  ))}
                 </tr>
               </thead>
+
               <tbody>
                 {paginatedRows.map((row, index) => (
-                  <tr key={row.sno}>
-                    <td style={td}>{(page - 1) * pageSize + index + 1}</td>
-                    <td style={td}>{row.weighbridge}</td>
-                    <td style={td}>{row.truckNo}</td>
-                    <td style={td}>{row.rfidNo}</td>
-                    <td style={td}>{row.grossWeight.toLocaleString("en-IN")}</td>
-                    <td style={td}>{row.tareWeight.toLocaleString("en-IN")}</td>
-                    <td style={td}>{row.netWeight.toLocaleString("en-IN")}</td>
-                    <td style={td}>{row.transactionDate}</td>
-                    <td style={td}>{row.transactionTime}</td>
-                    <td style={td}>{row.status}</td>
+                  <tr key={`${row.WBID}-${row.DatTim}-${index}`}>
+                    <td style={td}>
+                      {(currentPage - 1) * pageSize + index + 1}
+                    </td>
+                    <td style={td}>WB-{row.WBID}</td>
+                    <td style={td}>{row.RFNO ?? "-"}</td>
+                    <td style={td}>{row.TRUCKNO ?? "-"}</td>
+                    <td style={td}>
+                      {row.WEIGHT == null
+                        ? "-"
+                        : Number(row.WEIGHT).toLocaleString("en-IN")}
+                    </td>
+                    <td style={td}>{row.STATUS ?? "-"}</td>
+                    <td style={td}>{row.DatTim ?? "-"}</td>
+                    <td style={td}>{row.Center_Position ?? "-"}</td>
+                    <td style={td}>{row.RfCard_Detect ?? "-"}</td>
+                    <td style={td}>{row.EligibleSend ?? "-"}</td>
+                    <td style={td}>{row.EligibleReply ?? "-"}</td>
+                    <td style={td}>{row.StableCnt_Start ?? "-"}</td>
+                    <td style={td}>{row.StableCnt_End ?? "-"}</td>
+                    <td style={td}>{row.WeightService_Send ?? "-"}</td>
+                    <td style={td}>{row.WeighService_End ?? "-"}</td>
+                    <td style={td}>
+                      {row.TimeDifferenceFormatted ?? "-"}
+                    </td>
                   </tr>
                 ))}
-                {paginatedRows.length === 0 && <tr><td colSpan={10} style={{ ...td, padding: 30 }}>No records found.</td></tr>}
+
+                {paginatedRows.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={headers.length}
+                      style={{ ...td, padding: 30 }}
+                    >
+                      {loading ? "Loading..." : "No records found."}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+              marginTop: 20,
+            }}
+          >
             <span style={{ color: "#8a8f8d", fontSize: 13 }}>
-              Showing {filteredRows.length === 0 ? 0 : (page - 1) * pageSize + 1} - {Math.min(page * pageSize, filteredRows.length)} of {filteredRows.length} records
+              Showing{" "}
+              {filteredRows.length === 0
+                ? 0
+                : (currentPage - 1) * pageSize + 1}
+              {" - "}
+              {Math.min(currentPage * pageSize, filteredRows.length)} of{" "}
+              {filteredRows.length} records
             </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button disabled={page === 1} onClick={() => setPage(page - 1)} style={{ ...button, opacity: page === 1 ? 0.4 : 1 }}>Previous</button>
-              <span style={{ color: "#cfd4d2", fontSize: 13 }}>Page {page} / {totalPages}</span>
-              <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} style={{ ...button, opacity: page >= totalPages ? 0.4 : 1 }}>Next</button>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setPage(currentPage - 1)}
+                style={{
+                  ...button,
+                  opacity: currentPage === 1 ? 0.4 : 1,
+                }}
+              >
+                Previous
+              </button>
+
+              <span style={{ color: "#cfd4d2", fontSize: 13 }}>
+                Page {currentPage} / {totalPages}
+              </span>
+
+              <button
+                disabled={currentPage >= totalPages}
+                onClick={() => setPage(currentPage + 1)}
+                style={{
+                  ...button,
+                  opacity: currentPage >= totalPages ? 0.4 : 1,
+                }}
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>

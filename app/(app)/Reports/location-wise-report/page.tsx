@@ -1,46 +1,130 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type ReportRow = {
-  sno: number;
-  location: string;
-  weighbridge: string;
-  truckNo: string;
-  rfidNo: string;
-  weight: number;
-  date: string;
-  status: string;
+type Location = {
+  SID: number;
+  LOCNAME: string;
 };
 
-const mockData: ReportRow[] = [
-  { sno: 1, location: "Main Gate", weighbridge: "WB-1", truckNo: "TN09AB1234", rfidNo: "RF10001", weight: 42500, date: "2026-11-07", status: "Success" },
-  { sno: 2, location: "Plant Entry", weighbridge: "WB-2", truckNo: "TN10CD5678", rfidNo: "RF10002", weight: 38200, date: "2026-11-07", status: "Success" },
-  { sno: 3, location: "Main Gate", weighbridge: "WB-1", truckNo: "AP05EF9012", rfidNo: "RF10003", weight: 41000, date: "2026-11-07", status: "Success" },
-  { sno: 4, location: "Dispatch Gate", weighbridge: "WB-3", truckNo: "TN22GH3456", rfidNo: "RF10004", weight: 39800, date: "2026-11-07", status: "Pending" },
-  { sno: 5, location: "Plant Entry", weighbridge: "WB-2", truckNo: "KA03JK7890", rfidNo: "RF10005", weight: 43500, date: "2026-11-06", status: "Success" },
-  { sno: 6, location: "Dispatch Gate", weighbridge: "WB-3", truckNo: "TN09LM1122", rfidNo: "RF10006", weight: 40200, date: "2026-11-06", status: "Failed" },
-];
+type ReportRow = {
+  LOCSTR?: string;
+  RFNO?: string;
+  TRUCKNO?: string;
+  STATUS?: string;
+  DatTim?: string;
+};
+
+type SearchType = "DateWithLoc" | "TruckOnly";
 
 export default function LocationWiseReportPage() {
-  const [date, setDate] = useState("2026-11-07");
+  const [searchType, setSearchType] = useState<SearchType>("DateWithLoc");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [location, setLocation] = useState("ALL");
+  const [truckNo, setTruckNo] = useState("");
+
+  const [locations, setLocations] = useState<Location[]>([]);
   const [rows, setRows] = useState<ReportRow[]>([]);
+
+  const [loading, setLoading] = useState(false);
+  const [locationsLoading, setLocationsLoading] = useState(true);
   const [searched, setSearched] = useState(false);
+  const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
 
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) =>
-        Object.values(row).some((value) =>
-          String(value).toLowerCase().includes(search.toLowerCase())
-        )
-      ),
-    [rows, search]
-  );
+  useEffect(() => {
+    async function loadLocations() {
+      try {
+        const response = await fetch(
+          "/api/reports/location-wise?action=locations",
+          { cache: "no-store" }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Unable to load locations");
+        }
+
+        setLocations(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unable to load locations");
+      } finally {
+        setLocationsLoading(false);
+      }
+    }
+
+    loadLocations();
+  }, []);
+
+  async function getData() {
+    setError("");
+
+    if (searchType === "DateWithLoc") {
+      if (!date) {
+        setError("Please select a date.");
+        return;
+      }
+
+      if (location === "ALL") {
+        setError("Please select a location.");
+        return;
+      }
+    }
+
+    if (searchType === "TruckOnly" && !truckNo.trim()) {
+      setError("Please enter the truck number.");
+      return;
+    }
+
+    setLoading(true);
+    setSearched(true);
+    setPage(1);
+    setSearch("");
+
+    try {
+      const params = new URLSearchParams();
+
+      if (searchType === "DateWithLoc") {
+        params.set("date", date);
+        params.set("location", location);
+      } else {
+        params.set("truckNo", truckNo.trim());
+      }
+
+      const response = await fetch(
+        `/api/reports/location-wise?${params.toString()}`,
+        { cache: "no-store" }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to load report");
+      }
+
+      setRows(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setRows([]);
+      setError(err instanceof Error ? err.message : "Unable to load report");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const filteredRows = useMemo(() => {
+    const keyword = search.toLowerCase();
+
+    return rows.filter((row) =>
+      Object.values(row).some((value) =>
+        String(value ?? "").toLowerCase().includes(keyword)
+      )
+    );
+  }, [rows, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
 
@@ -49,17 +133,13 @@ export default function LocationWiseReportPage() {
     page * pageSize
   );
 
-  function getData() {
-    let result = mockData.filter((row) => row.date === date);
+  function formatDate(value?: string) {
+    if (!value) return "—";
 
-    if (location !== "ALL") {
-      result = result.filter((row) => row.location === location);
-    }
-
-    setRows(result);
-    setSearched(true);
-    setSearch("");
-    setPage(1);
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime())
+      ? value
+      : parsed.toLocaleString("en-IN");
   }
 
   function exportExcel() {
@@ -68,22 +148,20 @@ export default function LocationWiseReportPage() {
       return;
     }
 
-    const headers = ["SNO", "LOCATION", "WEIGHBRIDGE", "TRUCK NO", "RFID NO", "WEIGHT", "DATE", "STATUS"];
+    const headers = ["SNO", "LOCATION", "RFID NO", "TRUCK NO", "STATUS", "DATE TIME"];
 
     const csvRows = filteredRows.map((row, index) => [
       index + 1,
-      row.location,
-      row.weighbridge,
-      row.truckNo,
-      row.rfidNo,
-      row.weight,
-      row.date,
-      row.status,
+      row.LOCSTR,
+      row.RFNO,
+      row.TRUCKNO,
+      row.STATUS,
+      row.DatTim,
     ]);
 
     const csv = [headers, ...csvRows]
       .map((row) =>
-        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+        row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(",")
       )
       .join("\r\n");
 
@@ -112,8 +190,8 @@ export default function LocationWiseReportPage() {
     padding: "10px 12px",
     border: "1px solid #383838",
     borderRadius: 6,
-    background: "#111111",
-    color: "#ffffff",
+    background: "#111",
+    color: "#fff",
     fontSize: 14,
   };
 
@@ -141,82 +219,150 @@ export default function LocationWiseReportPage() {
     padding: 12,
     textAlign: "center",
     fontSize: 13,
-    color: "#ffffff",
+    color: "#fff",
     borderBottom: "1px solid #303030",
     whiteSpace: "nowrap",
   };
 
   return (
-    <div style={{ padding: 24, background: "#050505", minHeight: "100vh", color: "#ffffff" }}>
+    <main style={{ padding: 24, background: "#050505", minHeight: "100vh", color: "#fff" }}>
       <h1 style={{ fontSize: 22, fontWeight: 800, color: "#a8e6d9", marginBottom: 24 }}>
         LOCATION WISE REPORT
       </h1>
 
-      <div style={card}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 20 }}>
-          <div>
-            <label style={{ display: "block", marginBottom: 8, color: "#cfd4d2", fontSize: 13 }}>
-              Select Date *
-            </label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={input} />
-          </div>
+      <section style={card}>
+        <div style={{ display: "flex", gap: 28, flexWrap: "wrap", marginBottom: 22 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer" }}>
+            <input
+              type="radio"
+              checked={searchType === "DateWithLoc"}
+              onChange={() => setSearchType("DateWithLoc")}
+            />
+            Location with Datewise
+          </label>
 
-          <div>
-            <label style={{ display: "block", marginBottom: 8, color: "#cfd4d2", fontSize: 13 }}>
-              Location *
-            </label>
-            <select value={location} onChange={(e) => setLocation(e.target.value)} style={input}>
-              <option value="ALL">ALL</option>
-              <option value="Main Gate">Main Gate</option>
-              <option value="Plant Entry">Plant Entry</option>
-              <option value="Dispatch Gate">Dispatch Gate</option>
-            </select>
-          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer" }}>
+            <input
+              type="radio"
+              checked={searchType === "TruckOnly"}
+              onChange={() => setSearchType("TruckOnly")}
+            />
+            Truck No Only
+          </label>
         </div>
 
-        <button onClick={getData} style={{ ...button, marginTop: 22 }}>
-          Get Data
+        {searchType === "DateWithLoc" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 20 }}>
+            <div>
+              <label style={{ display: "block", marginBottom: 8, fontSize: 13 }}>
+                Select Date *
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                style={input}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", marginBottom: 8, fontSize: 13 }}>
+                Location *
+              </label>
+              <select
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                style={input}
+                disabled={locationsLoading}
+              >
+                <option value="ALL">
+                  {locationsLoading ? "Loading locations..." : "Select Location"}
+                </option>
+                {locations.map((item) => (
+                  <option key={item.SID} value={item.SID}>
+                    {item.LOCNAME}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div style={{ maxWidth: 450 }}>
+            <label style={{ display: "block", marginBottom: 8, fontSize: 13 }}>
+              Enter Truck Number *
+            </label>
+            <input
+              value={truckNo}
+              onChange={(e) => setTruckNo(e.target.value)}
+              placeholder="Enter truck number"
+              style={input}
+            />
+          </div>
+        )}
+
+        <button onClick={getData} disabled={loading} style={{ ...button, marginTop: 22, opacity: loading ? 0.6 : 1 }}>
+          {loading ? "Loading..." : "Get Data"}
         </button>
-      </div>
+
+        {error && (
+          <p style={{ color: "#f87171", marginTop: 15, fontSize: 13 }}>
+            {error}
+          </p>
+        )}
+      </section>
 
       {searched && (
-        <div style={card}>
+        <section style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-            <h2 style={{ fontSize: 17, color: "#a8e6d9", fontWeight: 700 }}>Report Details</h2>
+            <h2 style={{ color: "#a8e6d9", fontWeight: 700 }}>Report Details</h2>
             <button onClick={exportExcel} style={button}>Export Excel</button>
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
-            <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ ...input, width: 100 }}>
-              {[5, 10, 15, 20, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
+            <select
+              value={pageSize}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              style={{ ...input, width: 100 }}
+            >
+              {[5, 10, 15, 20, 50, 100].map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
             </select>
-            <input placeholder="Search report..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} style={{ ...input, width: 260 }} />
+
+            <input
+              placeholder="Search report..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              style={{ ...input, width: 260 }}
+            />
           </div>
 
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 950 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 850 }}>
               <thead>
                 <tr>
-                  {["SNO", "LOCATION", "WEIGHBRIDGE", "TRUCK NO", "RFID NO", "WEIGHT", "DATE", "STATUS"].map((heading) => (
+                  {["SNO", "LOCATION", "RFID NO", "TRUCK NO", "STATUS", "DATE TIME"].map((heading) => (
                     <th key={heading} style={th}>{heading}</th>
                   ))}
                 </tr>
               </thead>
+
               <tbody>
-                {paginatedRows.map((row, index) => (
-                  <tr key={row.sno}>
-                    <td style={td}>{(page - 1) * pageSize + index + 1}</td>
-                    <td style={td}>{row.location}</td>
-                    <td style={td}>{row.weighbridge}</td>
-                    <td style={td}>{row.truckNo}</td>
-                    <td style={td}>{row.rfidNo}</td>
-                    <td style={td}>{row.weight.toLocaleString("en-IN")}</td>
-                    <td style={td}>{row.date}</td>
-                    <td style={td}>{row.status}</td>
-                  </tr>
-                ))}
-                {paginatedRows.length === 0 && (
-                  <tr><td colSpan={8} style={{ ...td, padding: 30 }}>No records found.</td></tr>
+                {loading ? (
+                  <tr><td colSpan={6} style={{ ...td, padding: 30 }}>Loading report...</td></tr>
+                ) : paginatedRows.length === 0 ? (
+                  <tr><td colSpan={6} style={{ ...td, padding: 30 }}>No records found.</td></tr>
+                ) : (
+                  paginatedRows.map((row, index) => (
+                    <tr key={`${row.RFNO ?? "record"}-${index}`}>
+                      <td style={td}>{(page - 1) * pageSize + index + 1}</td>
+                      <td style={td}>{row.LOCSTR || "—"}</td>
+                      <td style={td}>{row.RFNO || "—"}</td>
+                      <td style={td}>{row.TRUCKNO || "—"}</td>
+                      <td style={td}>{row.STATUS || "—"}</td>
+                      <td style={td}>{formatDate(row.DatTim)}</td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -224,16 +370,21 @@ export default function LocationWiseReportPage() {
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
             <span style={{ color: "#8a8f8d", fontSize: 13 }}>
-              Showing {filteredRows.length === 0 ? 0 : (page - 1) * pageSize + 1} - {Math.min(page * pageSize, filteredRows.length)} of {filteredRows.length} records
+              Showing {filteredRows.length ? (page - 1) * pageSize + 1 : 0} - {Math.min(page * pageSize, filteredRows.length)} of {filteredRows.length} records
             </span>
+
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button disabled={page === 1} onClick={() => setPage(page - 1)} style={{ ...button, opacity: page === 1 ? 0.4 : 1 }}>Previous</button>
-              <span style={{ color: "#cfd4d2", fontSize: 13 }}>Page {page} / {totalPages}</span>
-              <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} style={{ ...button, opacity: page >= totalPages ? 0.4 : 1 }}>Next</button>
+              <button disabled={page === 1} onClick={() => setPage(page - 1)} style={{ ...button, opacity: page === 1 ? 0.4 : 1 }}>
+                Previous
+              </button>
+              <span style={{ fontSize: 13 }}>Page {page} / {totalPages}</span>
+              <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} style={{ ...button, opacity: page >= totalPages ? 0.4 : 1 }}>
+                Next
+              </button>
             </div>
           </div>
-        </div>
+        </section>
       )}
-    </div>
+    </main>
   );
 }

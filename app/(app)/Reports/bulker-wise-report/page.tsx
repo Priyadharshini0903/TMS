@@ -1,44 +1,78 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type ReportRow = {
-  wbId: string;
-  rfidNo: string;
-  truckNo: string;
-  weight: number;
-  status: string;
-  timestamp: string;
+type BulkerConfig = {
+  WBID: number;
+  ITEMNAME: string;
 };
 
-// Temporary sample data. Replace with API data when DB is ready.
-const mockData: ReportRow[] = [
-  { wbId: "1", rfidNo: "RF10001", truckNo: "TN09AB1234", weight: 42500, status: "Success", timestamp: "2026-11-07 08:15:20" },
-  { wbId: "2", rfidNo: "RF10002", truckNo: "TN10CD5678", weight: 38200, status: "Success", timestamp: "2026-11-07 08:25:40" },
-  { wbId: "1", rfidNo: "RF10003", truckNo: "AP05EF9012", weight: 41000, status: "Success", timestamp: "2026-11-07 09:10:12" },
-  { wbId: "3", rfidNo: "RF10004", truckNo: "TN22GH3456", weight: 39800, status: "Pending", timestamp: "2026-11-07 09:45:10" },
-  { wbId: "2", rfidNo: "RF10005", truckNo: "KA03JK7890", weight: 43500, status: "Success", timestamp: "2026-11-07 10:05:32" },
-  { wbId: "1", rfidNo: "RF10006", truckNo: "TN09LM1122", weight: 40200, status: "Success", timestamp: "2026-11-06 11:15:20" },
-  { wbId: "3", rfidNo: "RF10007", truckNo: "AP16NP3344", weight: 41700, status: "Failed", timestamp: "2026-11-06 12:25:40" },
-];
+type ReportRow = {
+  WBID: number;
+  RFNO: string | null;
+  TRUCKNO: string | null;
+  WEIGHT: string | number | null;
+  STATUS: string | null;
+  DatTim: string;
+};
 
 export default function BulkerWiseReportPage() {
   const [reportType, setReportType] = useState<"date" | "truck" | "">("");
-  const [selectedDate, setSelectedDate] = useState("2026-11-07");
+  const [selectedDate, setSelectedDate] = useState("");
   const [weighbridge, setWeighbridge] = useState("ALL");
   const [truckNo, setTruckNo] = useState("");
+
+  const [bulkers, setBulkers] = useState<BulkerConfig[]>([]);
   const [rows, setRows] = useState<ReportRow[]>([]);
+
   const [searched, setSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    async function loadBulkers() {
+      try {
+        const response = await fetch(
+          "/api/reports/bulker-wise?action=bulkers",
+          { cache: "no-store" }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Unable to load weighbridges.");
+        }
+
+        setBulkers(result.data || []);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Unable to load weighbridges."
+        );
+      }
+    }
+
+    loadBulkers();
+  }, []);
+
   const filteredRows = useMemo(() => {
+    const term = search.toLowerCase().trim();
+
+    if (!term) return rows;
+
     return rows.filter((row) =>
-      Object.values(row).some((value) =>
-        String(value).toLowerCase().includes(search.toLowerCase())
-      )
+      [
+        row.WBID,
+        row.RFNO,
+        row.TRUCKNO,
+        row.WEIGHT,
+        row.STATUS,
+        row.DatTim,
+      ].some((value) => String(value ?? "").toLowerCase().includes(term))
     );
   }, [rows, search]);
 
@@ -49,44 +83,60 @@ export default function BulkerWiseReportPage() {
     page * pageSize
   );
 
-  function getData() {
+  async function getData() {
+    setError("");
+
     if (!reportType) {
-      alert("Please select a report type.");
+      setError("Please select a report type.");
       return;
     }
 
     if (reportType === "date" && !selectedDate) {
-      alert("Please select a date.");
+      setError("Please select a date.");
       return;
     }
 
     if (reportType === "truck" && !truckNo.trim()) {
-      alert("Please enter the truck number.");
+      setError("Please enter the truck number.");
       return;
     }
 
-    let result = mockData;
+    setLoading(true);
+    setSearched(false);
 
-    if (reportType === "date") {
-      result = result.filter((row) =>
-        row.timestamp.startsWith(selectedDate)
-      );
+    try {
+      const response = await fetch("/api/reports/bulker-wise", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reportType,
+          selectedDate,
+          weighbridge,
+          truckNo,
+        }),
+      });
 
-      if (weighbridge !== "ALL") {
-        result = result.filter((row) => row.wbId === weighbridge);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to generate report.");
       }
-    }
 
-    if (reportType === "truck") {
-      result = result.filter((row) =>
-        row.truckNo.toLowerCase().includes(truckNo.trim().toLowerCase())
+      setRows(result.data || []);
+      setSearched(true);
+      setSearch("");
+      setPage(1);
+    } catch (err) {
+      setRows([]);
+      setSearched(true);
+      setError(
+        err instanceof Error ? err.message : "Unable to generate report."
       );
+    } finally {
+      setLoading(false);
     }
-
-    setRows(result);
-    setSearched(true);
-    setSearch("");
-    setPage(1);
   }
 
   function exportExcel() {
@@ -107,17 +157,19 @@ export default function BulkerWiseReportPage() {
 
     const csvRows = filteredRows.map((row, index) => [
       index + 1,
-      `WB-${row.wbId}`,
-      row.rfidNo,
-      row.truckNo,
-      row.weight,
-      row.status,
-      row.timestamp,
+      `WB-${row.WBID}`,
+      row.RFNO ?? "",
+      row.TRUCKNO ?? "",
+      row.WEIGHT ?? "",
+      row.STATUS ?? "",
+      row.DatTim ?? "",
     ]);
 
     const csv = [headers, ...csvRows]
       .map((row) =>
-        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+        row
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+          .join(",")
       )
       .join("\r\n");
 
@@ -127,9 +179,11 @@ export default function BulkerWiseReportPage() {
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
+
     link.href = url;
     link.download = "BulkerWiseReport.csv";
     link.click();
+
     URL.revokeObjectURL(url);
   }
 
@@ -180,6 +234,7 @@ export default function BulkerWiseReportPage() {
       textAlign: "center",
       fontSize: 13,
       whiteSpace: "nowrap",
+      color: "#334155",
     },
   };
 
@@ -199,7 +254,6 @@ export default function BulkerWiseReportPage() {
         </h1>
       </div>
 
-      {/* FILTER SECTION */}
       <div style={styles.card}>
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -209,6 +263,8 @@ export default function BulkerWiseReportPage() {
               onChange={() => {
                 setReportType(reportType === "date" ? "" : "date");
                 setSearched(false);
+                setRows([]);
+                setError("");
               }}
             />
             Bulker with Datewise
@@ -221,6 +277,8 @@ export default function BulkerWiseReportPage() {
               onChange={() => {
                 setReportType(reportType === "truck" ? "" : "truck");
                 setSearched(false);
+                setRows([]);
+                setError("");
               }}
             />
             Truck no only
@@ -254,9 +312,11 @@ export default function BulkerWiseReportPage() {
                 style={styles.input}
               >
                 <option value="ALL">ALL</option>
-                <option value="1">WB-1</option>
-                <option value="2">WB-2</option>
-                <option value="3">WB-3</option>
+                {bulkers.map((item) => (
+                  <option key={item.WBID} value={String(item.WBID)}>
+                    {item.ITEMNAME || `WB-${item.WBID}`}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -267,7 +327,7 @@ export default function BulkerWiseReportPage() {
             <label style={styles.label}>Enter the Truck No *</label>
             <input
               type="text"
-              placeholder="Eg: TN09AB1234"
+              placeholder="Eg: OD04Z2867"
               value={truckNo}
               onChange={(e) => setTruckNo(e.target.value)}
               style={styles.input}
@@ -276,13 +336,22 @@ export default function BulkerWiseReportPage() {
         )}
 
         <div style={{ marginTop: 22 }}>
-          <button onClick={getData} style={styles.button}>
-            Get Data
+          <button
+            onClick={getData}
+            disabled={loading}
+            style={{ ...styles.button, opacity: loading ? 0.6 : 1 }}
+          >
+            {loading ? "Loading..." : "Get Data"}
           </button>
         </div>
+
+        {error && (
+          <p style={{ color: "#dc2626", marginTop: 14, fontSize: 14 }}>
+            {error}
+          </p>
+        )}
       </div>
 
-      {/* REPORT TABLE */}
       {searched && (
         <div style={styles.card}>
           <div
@@ -369,38 +438,31 @@ export default function BulkerWiseReportPage() {
 
               <tbody>
                 {paginatedRows.map((row, index) => (
-                  <tr key={`${row.rfidNo}-${index}`}>
+                  <tr key={`${row.WBID}-${row.RFNO}-${index}`}>
                     <td style={styles.td}>
                       {(page - 1) * pageSize + index + 1}
                     </td>
-                    <td style={styles.td}>WB-{row.wbId}</td>
-                    <td style={styles.td}>{row.rfidNo}</td>
-                    <td style={styles.td}>{row.truckNo}</td>
+                    <td style={styles.td}>WB-{row.WBID}</td>
+                    <td style={styles.td}>{row.RFNO || "-"}</td>
+                    <td style={styles.td}>{row.TRUCKNO || "-"}</td>
                     <td style={styles.td}>
-                      {row.weight.toLocaleString("en-IN")}
+                      {Number(row.WEIGHT || 0).toLocaleString("en-IN")}
                     </td>
+                    <td style={styles.td}>{row.STATUS || "-"}</td>
                     <td style={styles.td}>
-                      <span
-                        style={{
-                          color:
-                            row.status === "Success"
-                              ? "#15803d"
-                              : row.status === "Failed"
-                              ? "#dc2626"
-                              : "#d97706",
-                          fontWeight: 700,
-                        }}
-                      >
-                        {row.status}
-                      </span>
+                      {row.DatTim
+                        ? new Date(row.DatTim).toLocaleString("en-IN")
+                        : "-"}
                     </td>
-                    <td style={styles.td}>{row.timestamp}</td>
                   </tr>
                 ))}
 
                 {paginatedRows.length === 0 && (
                   <tr>
-                    <td colSpan={7} style={{ padding: 30, textAlign: "center" }}>
+                    <td
+                      colSpan={7}
+                      style={{ padding: 30, textAlign: "center" }}
+                    >
                       No records found.
                     </td>
                   </tr>
@@ -420,7 +482,8 @@ export default function BulkerWiseReportPage() {
             }}
           >
             <span style={{ fontSize: 13, color: "#64748b" }}>
-              Showing {filteredRows.length === 0 ? 0 : (page - 1) * pageSize + 1}
+              Showing{" "}
+              {filteredRows.length === 0 ? 0 : (page - 1) * pageSize + 1}
               {" - "}
               {Math.min(page * pageSize, filteredRows.length)}
               {" of "}

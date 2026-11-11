@@ -1,46 +1,81 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type ReportRow = {
-  sno: number;
-  weighbridge: string;
-  truckNo: string;
-  rfidNo: string;
-  grossWeight: number;
-  tareWeight: number;
-  netWeight: number;
-  date: string;
+type Weighbridge = {
+  WBID: number;
+  LOCNAME: string;
 };
 
-const mockData: ReportRow[] = [
-  { sno: 1, weighbridge: "WB-1", truckNo: "TN09AB1234", rfidNo: "RF10001", grossWeight: 42500, tareWeight: 14500, netWeight: 28000, date: "2026-11-07" },
-  { sno: 2, weighbridge: "WB-2", truckNo: "TN10CD5678", rfidNo: "RF10002", grossWeight: 38200, tareWeight: 13200, netWeight: 25000, date: "2026-11-07" },
-  { sno: 3, weighbridge: "WB-1", truckNo: "AP05EF9012", rfidNo: "RF10003", grossWeight: 41000, tareWeight: 14000, netWeight: 27000, date: "2026-11-07" },
-  { sno: 4, weighbridge: "WB-3", truckNo: "TN22GH3456", rfidNo: "RF10004", grossWeight: 39800, tareWeight: 13800, netWeight: 26000, date: "2026-11-07" },
-  { sno: 5, weighbridge: "WB-2", truckNo: "KA03JK7890", rfidNo: "RF10005", grossWeight: 43500, tareWeight: 15500, netWeight: 28000, date: "2026-11-06" },
-  { sno: 6, weighbridge: "WB-1", truckNo: "TN09LM1122", rfidNo: "RF10006", grossWeight: 40200, tareWeight: 14200, netWeight: 26000, date: "2026-11-06" },
-];
+type ReportRow = {
+  WBID: number;
+  RFNO: string;
+  TRUCKNO: string;
+  WEIGHT: number | string;
+  STATUS: string;
+  DatTim: string;
+  Center_Position?: string;
+  RfCard_Detect?: string;
+  EligibleSend?: string;
+  EligibleReply?: string;
+  StableCnt_Start?: string;
+  StableCnt_End?: string;
+  WeightService_Send?: string;
+  WeighService_End?: string;
+  TimeDifferenceFormatted?: string;
+};
 
 export default function WeighbridgeWiseReportPage() {
-  const [date, setDate] = useState("2026-11-07");
+  const [mode, setMode] = useState<"DateWithWb" | "TruckOnly">("DateWithWb");
+  const [date, setDate] = useState("2026-11-11");
   const [weighbridge, setWeighbridge] = useState("ALL");
+  const [truckNo, setTruckNo] = useState("");
+
+  const [weighbridges, setWeighbridges] = useState<Weighbridge[]>([]);
   const [rows, setRows] = useState<ReportRow[]>([]);
+
   const [searched, setSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
 
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) =>
-        Object.values(row).some((value) =>
-          String(value).toLowerCase().includes(search.toLowerCase())
-        )
-      ),
-    [rows, search]
-  );
+  useEffect(() => {
+    async function loadWeighbridges() {
+      try {
+        const response = await fetch(
+          "/api/reports/weighbridge-wise?action=weighbridges"
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Unable to load weighbridges.");
+        }
+
+        setWeighbridges(data);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Unable to load weighbridges."
+        );
+      }
+    }
+
+    loadWeighbridges();
+  }, []);
+
+  const filteredRows = useMemo(() => {
+    const term = search.toLowerCase();
+
+    return rows.filter((row) =>
+      Object.values(row).some((value) =>
+        String(value ?? "").toLowerCase().includes(term)
+      )
+    );
+  }, [rows, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
 
@@ -49,17 +84,58 @@ export default function WeighbridgeWiseReportPage() {
     page * pageSize
   );
 
-  function getData() {
-    let result = mockData.filter((row) => row.date === date);
-
-    if (weighbridge !== "ALL") {
-      result = result.filter((row) => row.weighbridge === weighbridge);
+  async function getData() {
+    if (mode === "DateWithWb" && !date) {
+      alert("Please select a date.");
+      return;
     }
 
-    setRows(result);
-    setSearched(true);
+    if (mode === "DateWithWb" && !weighbridge) {
+      alert("Please select a weighbridge.");
+      return;
+    }
+
+    if (mode === "TruckOnly" && !truckNo.trim()) {
+      alert("Please enter truck number.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setRows([]);
     setSearch("");
     setPage(1);
+    setSearched(true);
+
+    try {
+      const params = new URLSearchParams();
+      params.set("reqType", mode);
+
+      if (mode === "DateWithWb") {
+        params.set("date", date);
+        params.set("weighbridge", weighbridge);
+      } else {
+        params.set("truckNo", truckNo.trim());
+      }
+
+      const response = await fetch(
+        `/api/reports/weighbridge-wise?${params.toString()}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to load report.");
+      }
+
+      setRows(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to load report."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   function exportExcel() {
@@ -71,28 +147,44 @@ export default function WeighbridgeWiseReportPage() {
     const headers = [
       "SNO",
       "WEIGHBRIDGE",
-      "TRUCK NO",
       "RFID NO",
-      "GROSS WEIGHT",
-      "TARE WEIGHT",
-      "NET WEIGHT",
-      "DATE",
+      "TRUCK NO",
+      "WEIGHT",
+      "STATUS",
+      "RESPONSE TIMESTAMP",
+      "CENTER POSITION",
+      "RF CARD DETECT",
+      "ELIGIBLE SEND",
+      "ELIGIBLE REPLY",
+      "STABLE COUNT START",
+      "STABLE COUNT END",
+      "WEIGHT SERVICE SEND",
+      "WEIGH SERVICE END",
+      "TIME DIFFERENCE",
     ];
 
     const csvRows = filteredRows.map((row, index) => [
       index + 1,
-      row.weighbridge,
-      row.truckNo,
-      row.rfidNo,
-      row.grossWeight,
-      row.tareWeight,
-      row.netWeight,
-      row.date,
+      `WB-${row.WBID}`,
+      row.RFNO,
+      row.TRUCKNO,
+      row.WEIGHT,
+      row.STATUS,
+      row.DatTim,
+      row.Center_Position,
+      row.RfCard_Detect,
+      row.EligibleSend,
+      row.EligibleReply,
+      row.StableCnt_Start,
+      row.StableCnt_End,
+      row.WeightService_Send,
+      row.WeighService_End,
+      row.TimeDifferenceFormatted,
     ]);
 
     const csv = [headers, ...csvRows]
       .map((row) =>
-        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+        row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(",")
       )
       .join("\r\n");
 
@@ -162,70 +254,182 @@ export default function WeighbridgeWiseReportPage() {
       </h1>
 
       <div style={card}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 20 }}>
-          <div>
-            <label style={{ display: "block", marginBottom: 8, color: "#cfd4d2", fontSize: 13 }}>
-              Select Date *
-            </label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={input} />
-          </div>
+        <div style={{ display: "flex", gap: 24, marginBottom: 24 }}>
+          <label>
+            <input
+              type="radio"
+              checked={mode === "DateWithWb"}
+              onChange={() => {
+                setMode("DateWithWb");
+                setRows([]);
+                setSearched(false);
+                setError("");
+              }}
+            />{" "}
+            Weighbridge with Datewise
+          </label>
 
-          <div>
-            <label style={{ display: "block", marginBottom: 8, color: "#cfd4d2", fontSize: 13 }}>
-              Weighbridge *
-            </label>
-            <select value={weighbridge} onChange={(e) => setWeighbridge(e.target.value)} style={input}>
-              <option value="ALL">ALL</option>
-              <option value="WB-1">WB-1</option>
-              <option value="WB-2">WB-2</option>
-              <option value="WB-3">WB-3</option>
-            </select>
-          </div>
+          <label>
+            <input
+              type="radio"
+              checked={mode === "TruckOnly"}
+              onChange={() => {
+                setMode("TruckOnly");
+                setRows([]);
+                setSearched(false);
+                setError("");
+              }}
+            />{" "}
+            Truck No Only
+          </label>
         </div>
 
-        <button onClick={getData} style={{ ...button, marginTop: 22 }}>
-          Get Data
+        {mode === "DateWithWb" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 20 }}>
+            <div>
+              <label style={{ display: "block", marginBottom: 8, fontSize: 13 }}>
+                Select Date *
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                style={input}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", marginBottom: 8, fontSize: 13 }}>
+                Weighbridge *
+              </label>
+              <select
+                value={weighbridge}
+                onChange={(e) => setWeighbridge(e.target.value)}
+                style={input}
+              >
+                <option value="ALL">ALL</option>
+                {weighbridges.map((wb) => (
+                  <option key={wb.WBID} value={wb.WBID}>
+                    {wb.LOCNAME}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div style={{ maxWidth: 500 }}>
+            <label style={{ display: "block", marginBottom: 8, fontSize: 13 }}>
+              Enter Truck Number *
+            </label>
+            <input
+              value={truckNo}
+              onChange={(e) => setTruckNo(e.target.value)}
+              placeholder="eg: XX12Q5100"
+              style={input}
+            />
+          </div>
+        )}
+
+        <button onClick={getData} disabled={loading} style={{ ...button, marginTop: 22, opacity: loading ? 0.6 : 1 }}>
+          {loading ? "Please wait..." : "Get Data"}
         </button>
+
+        {error && (
+          <p style={{ color: "#ff7777", marginTop: 14 }}>{error}</p>
+        )}
       </div>
 
       {searched && (
         <div style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-            <h2 style={{ fontSize: 17, color: "#a8e6d9", fontWeight: 700 }}>Report Details</h2>
+            <h2 style={{ fontSize: 17, color: "#a8e6d9", fontWeight: 700 }}>
+              Report Details
+            </h2>
             <button onClick={exportExcel} style={button}>Export Excel</button>
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
-            <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ ...input, width: 100 }}>
-              {[5, 10, 15, 20, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              style={{ ...input, width: 100 }}
+            >
+              {[5, 10, 15, 20, 50, 100, 5000].map((size) => (
+                <option key={size} value={size}>
+                  {size === 5000 ? "ALL" : size}
+                </option>
+              ))}
             </select>
-            <input placeholder="Search report..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} style={{ ...input, width: 260 }} />
+
+            <input
+              placeholder="Search report..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              style={{ ...input, width: 260 }}
+            />
           </div>
 
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1200 }}>
               <thead>
                 <tr>
-                  {["SNO", "WEIGHBRIDGE", "TRUCK NO", "RFID NO", "GROSS WEIGHT", "TARE WEIGHT", "NET WEIGHT", "DATE"].map((heading) => (
+                  {[
+                    "SNO",
+                    "WEIGHBRIDGE",
+                    "RFID NO",
+                    "TRUCK NO",
+                    "WEIGHT",
+                    "STATUS",
+                    "RESPONSE TIMESTAMP",
+                    "CENTER POSITION",
+                    "RF CARD DETECT",
+                    "ELIGIBLE SEND",
+                    "ELIGIBLE REPLY",
+                    "STABLE COUNT START",
+                    "STABLE COUNT END",
+                    "WEIGHT SERVICE SEND",
+                    "WEIGH SERVICE END",
+                    "TIME DIFFERENCE",
+                  ].map((heading) => (
                     <th key={heading} style={th}>{heading}</th>
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {paginatedRows.map((row, index) => (
-                  <tr key={row.sno}>
+                  <tr key={`${row.WBID}-${row.RFNO}-${index}`}>
                     <td style={td}>{(page - 1) * pageSize + index + 1}</td>
-                    <td style={td}>{row.weighbridge}</td>
-                    <td style={td}>{row.truckNo}</td>
-                    <td style={td}>{row.rfidNo}</td>
-                    <td style={td}>{row.grossWeight.toLocaleString("en-IN")}</td>
-                    <td style={td}>{row.tareWeight.toLocaleString("en-IN")}</td>
-                    <td style={td}>{row.netWeight.toLocaleString("en-IN")}</td>
-                    <td style={td}>{row.date}</td>
+                    <td style={td}>WB-{row.WBID}</td>
+                    <td style={td}>{row.RFNO || "—"}</td>
+                    <td style={td}>{row.TRUCKNO || "—"}</td>
+                    <td style={td}>{row.WEIGHT ?? "—"}</td>
+                    <td style={td}>{row.STATUS || "—"}</td>
+                    <td style={td}>{row.DatTim || "—"}</td>
+                    <td style={td}>{row.Center_Position || "—"}</td>
+                    <td style={td}>{row.RfCard_Detect || "—"}</td>
+                    <td style={td}>{row.EligibleSend || "—"}</td>
+                    <td style={td}>{row.EligibleReply || "—"}</td>
+                    <td style={td}>{row.StableCnt_Start || "—"}</td>
+                    <td style={td}>{row.StableCnt_End || "—"}</td>
+                    <td style={td}>{row.WeightService_Send || "—"}</td>
+                    <td style={td}>{row.WeighService_End || "—"}</td>
+                    <td style={td}>{row.TimeDifferenceFormatted || "—"}</td>
                   </tr>
                 ))}
-                {paginatedRows.length === 0 && (
-                  <tr><td colSpan={8} style={{ ...td, padding: 30 }}>No records found.</td></tr>
+
+                {!loading && paginatedRows.length === 0 && (
+                  <tr>
+                    <td colSpan={16} style={{ ...td, padding: 30 }}>
+                      No records found.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -235,10 +439,17 @@ export default function WeighbridgeWiseReportPage() {
             <span style={{ color: "#8a8f8d", fontSize: 13 }}>
               Showing {filteredRows.length === 0 ? 0 : (page - 1) * pageSize + 1} - {Math.min(page * pageSize, filteredRows.length)} of {filteredRows.length} records
             </span>
+
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button disabled={page === 1} onClick={() => setPage(page - 1)} style={{ ...button, opacity: page === 1 ? 0.4 : 1 }}>Previous</button>
-              <span style={{ color: "#cfd4d2", fontSize: 13 }}>Page {page} / {totalPages}</span>
-              <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} style={{ ...button, opacity: page >= totalPages ? 0.4 : 1 }}>Next</button>
+              <button disabled={page === 1} onClick={() => setPage(page - 1)} style={{ ...button, opacity: page === 1 ? 0.4 : 1 }}>
+                Previous
+              </button>
+              <span style={{ color: "#cfd4d2", fontSize: 13 }}>
+                Page {page} / {totalPages}
+              </span>
+              <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} style={{ ...button, opacity: page >= totalPages ? 0.4 : 1 }}>
+                Next
+              </button>
             </div>
           </div>
         </div>
