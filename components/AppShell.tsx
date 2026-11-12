@@ -67,8 +67,7 @@ export default function AppShell({ plantId, plantCode, mode, truckReg, autoWb, r
         className={`fixed left-0 top-0 z-40 h-full w-64 overflow-y-auto p-3 transition-transform ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ background: "linear-gradient(180deg,#1b1f1e,#0e1110)" }}
-      >
+        style={{ background: "linear-gradient(180deg,#1b1f1e,#0e1110)" }}>
         <button onClick={() => setOpen(false)} className="mb-3 text-sm text-muted">✕ Close</button>
         <div className="space-y-1">
           {main.filter((m) => m[2]).map(([h, l]) => item(h, l))}

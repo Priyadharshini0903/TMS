@@ -179,8 +179,7 @@ export default function APILogsReport() {
               {headers.map((heading: string) => (
                 <th
                   key={heading}
-                  style={{ padding: 14, textAlign: "left", color: "#a8e6d9", borderBottom: "1px solid #333", fontSize: 12 }}
-                >
+                  style={{ padding: 14, textAlign: "left", color: "#a8e6d9", borderBottom: "1px solid #333", fontSize: 12 }}>
                   {heading}
                 </th>
               ))}
