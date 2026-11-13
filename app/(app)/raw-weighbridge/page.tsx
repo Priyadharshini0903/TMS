@@ -36,7 +36,7 @@ export default async function RawWeighbridgesPage() {
           Could not load raw weighbridges: {error}
         </div>
       ) : weighbridges.length === 0 ? (
-        <div className="rounded-xl border border-teal/30 bg-[#1a1a1a] p-4 text-sm text-muted">
+        <div className="rounded-xl border border-teal/30 bg-[#FFFFFF] p-4 text-sm text-muted">
           No raw weighbridges are configured.
         </div>
       ) : (

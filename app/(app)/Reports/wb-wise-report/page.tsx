@@ -205,8 +205,8 @@ export default function WbWiseReportPage() {
   }
 
   const card: React.CSSProperties = {
-    background: "#1a1a1a",
-    border: "1px solid #303030",
+    background: "#FFFFFF",
+    border: "1px solid #CBD5E1",
     borderRadius: 10,
     padding: 20,
     marginBottom: 20,
@@ -215,10 +215,10 @@ export default function WbWiseReportPage() {
   const input: React.CSSProperties = {
     width: "100%",
     padding: "10px 12px",
-    border: "1px solid #383838",
+    border: "1px solid #CBD5E1",
     borderRadius: 6,
-    background: "#111111",
-    color: "#ffffff",
+    background: "#F1F5F9",
+    color: "#0F172A",
     fontSize: 14,
   };
 
@@ -226,28 +226,28 @@ export default function WbWiseReportPage() {
     padding: "10px 18px",
     border: 0,
     borderRadius: 6,
-    background: "#a8e6d9",
-    color: "#050505",
+    background: "#0E7490",
+    color: "#FFFFFF",
     cursor: "pointer",
     fontWeight: 700,
   };
 
   const th: React.CSSProperties = {
     padding: 12,
-    background: "#252525",
-    color: "#a8e6d9",
+    background: "#F1F5F9",
+    color: "#0E7490",
     textAlign: "center",
     fontSize: 12,
     whiteSpace: "nowrap",
-    borderBottom: "1px solid #383838",
+    borderBottom: "1px solid #CBD5E1",
   };
 
   const td: React.CSSProperties = {
     padding: 12,
     textAlign: "center",
     fontSize: 12,
-    color: "#ffffff",
-    borderBottom: "1px solid #303030",
+    color: "#0F172A",
+    borderBottom: "1px solid #CBD5E1",
     whiteSpace: "nowrap",
   };
 
@@ -255,16 +255,16 @@ export default function WbWiseReportPage() {
     <div
       style={{
         padding: 24,
-        background: "#050505",
+        background: "#F8FAFC",
         minHeight: "100vh",
-        color: "#ffffff",
+        color: "#0F172A",
       }}
     >
       <h1
         style={{
           fontSize: 22,
           fontWeight: 800,
-          color: "#a8e6d9",
+          color: "#0E7490",
           marginBottom: 24,
         }}
       >
@@ -285,7 +285,7 @@ export default function WbWiseReportPage() {
               style={{
                 display: "block",
                 marginBottom: 8,
-                color: "#cfd4d2",
+                color: "#334155",
                 fontSize: 13,
               }}
             >
@@ -305,7 +305,7 @@ export default function WbWiseReportPage() {
               style={{
                 display: "block",
                 marginBottom: 8,
-                color: "#cfd4d2",
+                color: "#334155",
                 fontSize: 13,
               }}
             >
@@ -345,8 +345,8 @@ export default function WbWiseReportPage() {
       {error && (
         <div
           style={{
-            background: "#401c1c",
-            color: "#ff9999",
+            background: "#FEE2E2",
+            color: "#DC2626",
             padding: 14,
             borderRadius: 8,
             marginBottom: 18,
@@ -371,7 +371,7 @@ export default function WbWiseReportPage() {
             <h2
               style={{
                 fontSize: 17,
-                color: "#a8e6d9",
+                color: "#0E7490",
                 fontWeight: 700,
               }}
             >
@@ -497,7 +497,7 @@ export default function WbWiseReportPage() {
               marginTop: 20,
             }}
           >
-            <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+            <span style={{ color: "#64748B", fontSize: 13 }}>
               Showing{" "}
               {filteredRows.length === 0
                 ? 0
@@ -525,7 +525,7 @@ export default function WbWiseReportPage() {
                 Previous
               </button>
 
-              <span style={{ color: "#cfd4d2", fontSize: 13 }}>
+              <span style={{ color: "#334155", fontSize: 13 }}>
                 Page {currentPage} / {totalPages}
               </span>
 

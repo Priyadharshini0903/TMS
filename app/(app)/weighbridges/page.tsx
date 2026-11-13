@@ -25,7 +25,7 @@ export default async function WeighbridgesPage() {
           Could not load the weighbridge list: {error}
         </div>
       ) : weighbridges.length === 0 ? (
-        <div className="rounded-xl border border-teal/30 bg-[#1a1a1a] p-4 text-sm text-muted">
+        <div className="rounded-xl border border-teal/30 bg-[#FFFFFF] p-4 text-sm text-muted">
           No weighbridges are configured for this plant.
         </div>
       ) : (

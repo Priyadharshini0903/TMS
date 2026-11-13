@@ -112,9 +112,9 @@ function DeviceStatus({ live }: { live: LiveData }) {
   const availableDevices = devices.filter((device) => device.ip !== "");
 
   return (
-    <div className="h-fit self-start overflow-hidden rounded-xl border border-teal/30 bg-[#171a19]">
+    <div className="h-fit self-start overflow-hidden rounded-xl border border-teal/30 bg-[#FFFFFF]">
       {/* HEADER */}
-      <div className="bg-[#245f56] px-3 py-3 text-center font-bold text-white">
+      <div className="bg-[#0E7490] px-3 py-3 text-center font-bold text-white">
         Device Status
       </div>
 
@@ -128,10 +128,10 @@ function DeviceStatus({ live }: { live: LiveData }) {
             const healthy = isOn(device.status);
 
             return (
-              <div key={device.name} className="border-t border-white/10">
+              <div key={device.name} className="border-t border-slate-200">
                 {/* IP ADDRESS */}
                 <div className="grid grid-cols-[42%_58%]">
-                  <div className="border-r border-white/10 px-3 py-3 text-sm font-semibold text-muted">
+                  <div className="border-r border-slate-200 px-3 py-3 text-sm font-semibold text-muted">
                     {device.name} IP
                   </div>
 
@@ -141,14 +141,14 @@ function DeviceStatus({ live }: { live: LiveData }) {
                 </div>
 
                 {/* DEVICE STATUS */}
-                <div className="grid grid-cols-[42%_58%] border-t border-white/10">
-                  <div className="border-r border-white/10 px-3 py-3 text-sm font-semibold text-muted">
+                <div className="grid grid-cols-[42%_58%] border-t border-slate-200">
+                  <div className="border-r border-slate-200 px-3 py-3 text-sm font-semibold text-muted">
                     {device.name} Status
                   </div>
 
                   <div
                     className={`px-3 py-3 text-center text-sm font-semibold ${
-                      healthy ? "text-green-400" : "text-red-400"
+                      healthy ? "text-green-700" : "text-red-400"
                     }`}
                   >
                     {healthy ? "Healthy" : "Network Issue"}
@@ -232,10 +232,10 @@ function LastRecordsModal({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-teal/40 bg-[#1a1d1c] shadow-2xl"
+        className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-teal/40 bg-[#FFFFFF] shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-teal/30 bg-[#202624] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-teal/30 bg-[#F1F5F9] px-5 py-4">
           <div>
             <h2 className="text-lg font-bold text-accent sm:text-xl">
               Last 60 Responses
@@ -250,7 +250,7 @@ function LastRecordsModal({
           </span>
         </div>
 
-        <div className="relative min-h-0 flex-1 overflow-auto bg-[#1a1d1c] p-3 sm:p-4">
+        <div className="relative min-h-0 flex-1 overflow-auto bg-[#FFFFFF] p-3 sm:p-4">
           {loading ? (
             <p className="p-6 text-center text-muted">Loading records...</p>
           ) : error ? (
@@ -261,7 +261,7 @@ function LastRecordsModal({
             </p>
           ) : (
             <table className="w-full min-w-[850px] border-collapse text-sm">
-              <thead className="sticky top-0 z-30 bg-[#245f56] text-white">
+              <thead className="sticky top-0 z-30 bg-[#0E7490] text-white">
                 <tr>
                   {[
                     "Sno",
@@ -273,7 +273,7 @@ function LastRecordsModal({
                   ].map((heading) => (
                     <th
                       key={heading}
-                      className="border border-white/15 px-3 py-3 text-left font-semibold"
+                      className="border border-slate-300 px-3 py-3 text-left font-semibold"
                     >
                       {heading}
                     </th>
@@ -285,24 +285,24 @@ function LastRecordsModal({
                 {records.map((record, index) => (
                   <tr
                     key={`${record.rfno}-${index}`}
-                    className="border-b border-white/10 hover:bg-white/5"
+                    className="border-b border-slate-200 hover:bg-slate-100"
                   >
-                    <td className="border border-white/10 px-3 py-3 text-center text-muted">
+                    <td className="border border-slate-200 px-3 py-3 text-center text-muted">
                       {record.sno ?? index + 1}
                     </td>
-                    <td className="border border-white/10 px-3 py-3 text-accent">
+                    <td className="border border-slate-200 px-3 py-3 text-accent">
                       {display(record.rfno)}
                     </td>
-                    <td className="border border-white/10 px-3 py-3 text-white">
+                    <td className="border border-slate-200 px-3 py-3 text-slate-900">
                       {display(record.truckno)}
                     </td>
-                    <td className="border border-white/10 px-3 py-3 font-semibold text-accent">
+                    <td className="border border-slate-200 px-3 py-3 font-semibold text-accent">
                       {display(record.weight)}
                     </td>
-                    <td className="border border-white/10 px-3 py-3 text-green-400">
+                    <td className="border border-slate-200 px-3 py-3 text-green-700">
                       {display(record.status)}
                     </td>
-                    <td className="whitespace-nowrap border border-white/10 px-3 py-3 text-muted">
+                    <td className="whitespace-nowrap border border-slate-200 px-3 py-3 text-muted">
                       {display(record.timestamp)}
                     </td>
                   </tr>
@@ -312,7 +312,7 @@ function LastRecordsModal({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-white/10 bg-[#202624] px-5 py-4">
+        <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-[#F1F5F9] px-5 py-4">
           <p className="text-xs text-muted">Records retrieved from MySQL</p>
 
           <button
@@ -429,7 +429,7 @@ export default function WeighbridgeScreen({
               className={`rounded-lg px-3 py-2 text-sm transition-colors ${
                 active
                   ? "bg-accent font-semibold text-page"
-                  : "bg-pill text-pill-text hover:bg-white/10"
+                  : "bg-pill text-pill-text hover:bg-slate-200"
               }`}
             >
               {display(wb.LOCNAME, `WEIGHBRIDGE ${id}`)}
@@ -465,7 +465,7 @@ export default function WeighbridgeScreen({
                   <div key={key} className="text-center">
                     <p className="mb-2 text-xs text-muted">{label}</p>
 
-                    <div className="rounded-lg border border-white/10 bg-[#252a28] px-3 py-2 text-xl font-semibold text-accent">
+                    <div className="rounded-lg border border-slate-200 bg-[#F1F5F9] px-3 py-2 text-xl font-semibold text-accent">
                       {display(live?.[key], loading ? "…" : "0")}
                     </div>
                   </div>
@@ -483,14 +483,14 @@ export default function WeighbridgeScreen({
               </div>
 
               {/* WEIGHBRIDGE DIAGRAM - PHP STYLE */}
-              <div className="mt-5 overflow-hidden rounded-xl border border-teal/30 bg-[#111514] p-3 sm:p-5">
+              <div className="mt-5 overflow-hidden rounded-xl border border-teal/30 bg-[#F1F5F9] p-3 sm:p-5">
                 {/* RFID AND TRUCK NUMBER */}
                 <div className="mx-auto flex w-full max-w-xl flex-col gap-1">
-                  <div className="rounded-md border border-white/10 bg-[#252a28] px-4 py-2 text-center text-xl text-accent sm:text-2xl">
+                  <div className="rounded-md border border-slate-200 bg-[#F1F5F9] px-4 py-2 text-center text-xl text-accent sm:text-2xl">
                     {display(live?.RFNO, "RFID No.")}
                   </div>
 
-                  <div className="rounded-md border border-white/10 bg-[#252a28] px-4 py-2 text-center text-xl text-accent sm:text-2xl">
+                  <div className="rounded-md border border-slate-200 bg-[#F1F5F9] px-4 py-2 text-center text-xl text-accent sm:text-2xl">
                     {display(live?.TRKNO, "Truck No.")}
                   </div>
                 </div>
@@ -558,16 +558,16 @@ export default function WeighbridgeScreen({
                   </div>
 
                   {/* RIGHT BOOM BARRIER */}
-                  <div className="absolute right-[4%] top-[120px] z-20 h-16 w-7">
+                  <div className="absolute right-[clamp(145px,12%,180px)] top-[120px] z-20 h-16 w-7">
                     {/* Barrier pillar */}
                     <div className="h-[110px] w-7 rounded-t-sm bg-[#d83c19]" />
 
-                    {/* Animated arm */}
+                    {/* Animated arm - facing right */}
                     <div
-                      className="absolute right-5 top-2 h-2 w-[125px] origin-right border border-gray-400 shadow-md transition-transform duration-700 ease-in-out"
+                      className="absolute left-5 top-2 h-2 w-[125px] origin-left border border-gray-400 shadow-md transition-transform duration-700 ease-in-out"
                       style={{
                         transform: isOn(live?.BB2STAT)
-                          ? "rotate(55deg)"
+                          ? "rotate(-55deg)"
                           : "rotate(0deg)",
                         background:
                           "repeating-linear-gradient(135deg, #ffffff 0px, #ffffff 9px, #e52323 9px, #e52323 14px)",
@@ -582,35 +582,6 @@ export default function WeighbridgeScreen({
 
                   {/* BASE */}
                   <div className="absolute bottom-[16px] left-0 right-0 h-7 bg-[#91b4b9]" />
-                </div>
-
-                {/* BOOM BARRIER STATUS */}
-                <div className="mt-2 grid grid-cols-2 gap-3 rounded-lg bg-[#252a28] px-4 py-3 text-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-gray-300">Boom barrier 1</span>
-                    <span
-                      className={
-                        isOn(live?.BB1STAT)
-                          ? "font-semibold text-green-400"
-                          : "font-semibold text-red-400"
-                      }
-                    >
-                      {isOn(live?.BB1STAT) ? "OPEN" : "CLOSED"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-gray-300">Boom barrier 2</span>
-                    <span
-                      className={
-                        isOn(live?.BB2STAT)
-                          ? "font-semibold text-green-400"
-                          : "font-semibold text-red-400"
-                      }
-                    >
-                      {isOn(live?.BB2STAT) ? "OPEN" : "CLOSED"}
-                    </span>
-                  </div>
                 </div>
 
                 {/* CURRENT STATUS */}

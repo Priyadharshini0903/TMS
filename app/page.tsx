@@ -1,53 +1,3 @@
-// import { Suspense } from "react";
-// import { connection } from "next/server";
-// import { getPlants, type Plant } from "@/lib/db";
-// import PlantSelect from "./PlantSelect";
-
-// async function Plants() {
-//   await connection(); // render per request, not at build time
-//   let plants: Plant[] = [];
-//   let error = "";
-//   try {
-//     plants = await getPlants();
-//   } catch (e) {
-//     error = e instanceof Error ? e.message : "Database error";
-//   }
-//   return (
-//     <>
-//       <PlantSelect plants={plants} />
-//       {error && <p className="mt-4 text-sm text-badge">{error}</p>}
-//     </>
-//   );
-// }
-
-// export default function Home() {
-//   return (
-//     <main className="flex min-h-screen flex-col items-center justify-center px-4">
-//       <div
-//         className="w-full max-w-xl rounded-2xl border border-teal/40 p-8 text-center"
-//         style={{ background: "linear-gradient(135deg,#1a1a1a,#1e1e1e)" }}
-//       >
-//         <h1 className="text-2xl font-bold italic text-accent">
-//           ACCSYS RFID/WB CONTROL SYSTEM
-//           <sup className="ml-2 text-sm text-teal">{process.env.NEXT_PUBLIC_TMS_MODE}</sup>
-//         </h1>
-//         <div className="mt-8">
-//           <Suspense fallback={<p className="text-muted">Loading plants…</p>}>
-//             <Plants />
-//           </Suspense>
-//         </div>
-//       </div>
-//       <p className="fixed bottom-4 text-xs text-muted">
-//         Design &amp; Developed By Accsys Electronics-Chennai All rights reserved (20260303 v-1.11)
-//       </p>
-//     </main>
-//   );
-// }
-
-
-
-
-
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
@@ -107,8 +57,7 @@ export default async function Home({
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4">
       <div
-        className="w-full max-w-xl rounded-2xl border border-teal/40 p-8 text-center"
-        style={{ background: "linear-gradient(135deg,#1a1a1a,#1e1e1e)" }}
+        className="w-full max-w-xl rounded-2xl border border-teal/40 bg-white p-8 text-center shadow-xl shadow-slate-900/10"
       >
         <h1 className="text-2xl font-bold italic text-accent">
           ACCSYS RFID/WB CONTROL SYSTEM
@@ -129,7 +78,7 @@ export default async function Home({
               </p>
               <a
                 href="/api/sso/login"
-                className="flex w-full items-center justify-center gap-3 rounded-lg border border-teal bg-pill py-2.5 font-semibold text-pill-text transition hover:border-accent hover:text-accent hover:shadow-[0_0_18px_rgba(168,230,217,0.2)]"
+                className="flex w-full items-center justify-center gap-3 rounded-lg bg-accent py-2.5 font-semibold text-white transition hover:bg-teal"
               >
                 <MicrosoftLogo />
                 Sign in with Microsoft

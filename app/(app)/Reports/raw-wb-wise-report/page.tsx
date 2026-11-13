@@ -172,9 +172,9 @@ export default function RawWBWiseReport() {
   };
 
   const inputStyle: React.CSSProperties = {
-    background: "#1a1a1a",
-    color: "#fff",
-    border: "1px solid #333",
+    background: "#FFFFFF",
+    color: "#0F172A",
+    border: "1px solid #CBD5E1",
     borderRadius: 8,
     padding: "10px 12px",
     outline: "none",
@@ -184,8 +184,8 @@ export default function RawWBWiseReport() {
     <div
       style={{
         padding: 24,
-        color: "#fff",
-        background: "#050505",
+        color: "#0F172A",
+        background: "#F8FAFC",
         minHeight: "100vh",
       }}
     >
@@ -202,7 +202,7 @@ export default function RawWBWiseReport() {
           <h1 style={{ fontSize: 26, fontWeight: 700 }}>
             Raw WB Wise Report
           </h1>
-          <p style={{ color: "#8a8f8d", marginTop: 6 }}>
+          <p style={{ color: "#64748B", marginTop: 6 }}>
             Raw RFID data by weighbridge
           </p>
         </div>
@@ -210,8 +210,8 @@ export default function RawWBWiseReport() {
         <button
           onClick={exportCSV}
           style={{
-            background: "#a8e6d9",
-            color: "#050505",
+            background: "#0E7490",
+            color: "#FFFFFF",
             padding: "10px 18px",
             borderRadius: 8,
             fontWeight: 600,
@@ -285,8 +285,8 @@ export default function RawWBWiseReport() {
           disabled={loading}
           style={{
             ...inputStyle,
-            background: "#a8e6d9",
-            color: "#050505",
+            background: "#0E7490",
+            color: "#FFFFFF",
             fontWeight: 600,
             cursor: "pointer",
             opacity: loading ? 0.6 : 1,
@@ -297,13 +297,13 @@ export default function RawWBWiseReport() {
       </div>
 
       {error && (
-        <p style={{ color: "#f87171", marginBottom: 16 }}>{error}</p>
+        <p style={{ color: "#DC2626", marginBottom: 16 }}>{error}</p>
       )}
 
       <div
         style={{
-          background: "#1a1a1a",
-          border: "1px solid #292929",
+          background: "#FFFFFF",
+          border: "1px solid #CBD5E1",
           borderRadius: 12,
           overflowX: "auto",
         }}
@@ -323,8 +323,8 @@ export default function RawWBWiseReport() {
                   style={{
                     padding: 14,
                     textAlign: "left",
-                    color: "#a8e6d9",
-                    borderBottom: "1px solid #333",
+                    color: "#0E7490",
+                    borderBottom: "1px solid #CBD5E1",
                     fontSize: 12,
                     whiteSpace: "nowrap",
                   }}
@@ -352,9 +352,9 @@ export default function RawWBWiseReport() {
                     key={cellIndex}
                     style={{
                       padding: 14,
-                      borderBottom: "1px solid #292929",
+                      borderBottom: "1px solid #CBD5E1",
                       fontSize: 13,
-                      color: "#cfd4d2",
+                      color: "#334155",
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -371,7 +371,7 @@ export default function RawWBWiseReport() {
                   style={{
                     padding: 30,
                     textAlign: "center",
-                    color: "#8a8f8d",
+                    color: "#64748B",
                   }}
                 >
                   {rows.length === 0
@@ -394,7 +394,7 @@ export default function RawWBWiseReport() {
           gap: 12,
         }}
       >
-        <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+        <span style={{ color: "#64748B", fontSize: 13 }}>
           Showing{" "}
           {filteredData.length === 0
             ? 0
@@ -416,7 +416,7 @@ export default function RawWBWiseReport() {
             Previous
           </button>
 
-          <span style={{ padding: "10px 12px", color: "#a8e6d9" }}>
+          <span style={{ padding: "10px 12px", color: "#0E7490" }}>
             {currentPage} / {totalPages}
           </span>
 

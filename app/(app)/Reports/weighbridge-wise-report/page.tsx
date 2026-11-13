@@ -201,8 +201,8 @@ export default function WeighbridgeWiseReportPage() {
   }
 
   const card: React.CSSProperties = {
-    background: "#1a1a1a",
-    border: "1px solid #303030",
+    background: "#FFFFFF",
+    border: "1px solid #CBD5E1",
     borderRadius: 10,
     padding: 20,
     marginBottom: 20,
@@ -211,10 +211,10 @@ export default function WeighbridgeWiseReportPage() {
   const input: React.CSSProperties = {
     width: "100%",
     padding: "10px 12px",
-    border: "1px solid #383838",
+    border: "1px solid #CBD5E1",
     borderRadius: 6,
-    background: "#111111",
-    color: "#ffffff",
+    background: "#F1F5F9",
+    color: "#0F172A",
     fontSize: 14,
   };
 
@@ -222,34 +222,34 @@ export default function WeighbridgeWiseReportPage() {
     padding: "10px 18px",
     border: 0,
     borderRadius: 6,
-    background: "#a8e6d9",
-    color: "#050505",
+    background: "#0E7490",
+    color: "#FFFFFF",
     cursor: "pointer",
     fontWeight: 700,
   };
 
   const th: React.CSSProperties = {
     padding: 12,
-    background: "#252525",
-    color: "#a8e6d9",
+    background: "#F1F5F9",
+    color: "#0E7490",
     textAlign: "center",
     fontSize: 12,
     whiteSpace: "nowrap",
-    borderBottom: "1px solid #383838",
+    borderBottom: "1px solid #CBD5E1",
   };
 
   const td: React.CSSProperties = {
     padding: 12,
     textAlign: "center",
     fontSize: 13,
-    color: "#ffffff",
-    borderBottom: "1px solid #303030",
+    color: "#0F172A",
+    borderBottom: "1px solid #CBD5E1",
     whiteSpace: "nowrap",
   };
 
   return (
-    <div style={{ padding: 24, background: "#050505", minHeight: "100vh", color: "#ffffff" }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: "#a8e6d9", marginBottom: 24 }}>
+    <div style={{ padding: 24, background: "#F8FAFC", minHeight: "100vh", color: "#0F172A" }}>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: "#0E7490", marginBottom: 24 }}>
         WEIGHBRIDGE WISE REPORT
       </h1>
 
@@ -335,14 +335,14 @@ export default function WeighbridgeWiseReportPage() {
         </button>
 
         {error && (
-          <p style={{ color: "#ff7777", marginTop: 14 }}>{error}</p>
+          <p style={{ color: "#DC2626", marginTop: 14 }}>{error}</p>
         )}
       </div>
 
       {searched && (
         <div style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-            <h2 style={{ fontSize: 17, color: "#a8e6d9", fontWeight: 700 }}>
+            <h2 style={{ fontSize: 17, color: "#0E7490", fontWeight: 700 }}>
               Report Details
             </h2>
             <button onClick={exportExcel} style={button}>Export Excel</button>
@@ -436,7 +436,7 @@ export default function WeighbridgeWiseReportPage() {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
-            <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+            <span style={{ color: "#64748B", fontSize: 13 }}>
               Showing {filteredRows.length === 0 ? 0 : (page - 1) * pageSize + 1} - {Math.min(page * pageSize, filteredRows.length)} of {filteredRows.length} records
             </span>
 
@@ -444,7 +444,7 @@ export default function WeighbridgeWiseReportPage() {
               <button disabled={page === 1} onClick={() => setPage(page - 1)} style={{ ...button, opacity: page === 1 ? 0.4 : 1 }}>
                 Previous
               </button>
-              <span style={{ color: "#cfd4d2", fontSize: 13 }}>
+              <span style={{ color: "#334155", fontSize: 13 }}>
                 Page {page} / {totalPages}
               </span>
               <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} style={{ ...button, opacity: page >= totalPages ? 0.4 : 1 }}>

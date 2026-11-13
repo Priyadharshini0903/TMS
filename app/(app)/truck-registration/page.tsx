@@ -116,10 +116,10 @@ export default function TruckRegistrationPage() {
     }
   };
 
-  const labelClass = "mb-2 block text-base font-semibold text-cyan-100";
+  const labelClass = "mb-2 block text-base font-semibold text-slate-700";
 
   const inputClass =
-    "h-[46px] w-full rounded-md border border-[#315b57] bg-[#111918] px-3 text-[15px] text-white outline-none placeholder:text-gray-500 focus:border-[#65e6d2] focus:ring-1 focus:ring-[#65e6d2] disabled:cursor-not-allowed disabled:bg-[#252b2a] disabled:text-gray-300";
+    "h-[46px] w-full rounded-md border border-[#CBD5E1] bg-[#F1F5F9] px-3 text-[15px] text-slate-900 outline-none placeholder:text-gray-500 focus:border-[#0891B2] focus:ring-1 focus:ring-[#0891B2] disabled:cursor-not-allowed disabled:bg-[#F1F5F9] disabled:text-slate-400";
 
   const buttonClass =
     "h-[46px] rounded-md px-5 text-[15px] font-semibold transition duration-200";
@@ -149,23 +149,23 @@ export default function TruckRegistrationPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#080b0a] p-3 md:p-4 text-white">
+    <div className="min-h-screen bg-[#F8FAFC] p-3 md:p-4 text-slate-900">
       {/* Page heading */}
-      <div className="mb-4 rounded-md border border-[#315b57] bg-[#151c1b] px-5 py-3">
-        <h1 className="text-xl font-bold tracking-wide text-[#a5f3e7]">
+      <div className="mb-4 rounded-md border border-[#CBD5E1] bg-[#FFFFFF] px-5 py-3">
+        <h1 className="text-xl font-bold tracking-wide text-[#0E7490]">
           Add Truck
         </h1>
       </div>
 
       {/* Registration panel */}
-      <div className="w-full rounded-md border border-[#315b57] bg-[#171d1c] shadow-lg shadow-black/30">
+      <div className="w-full rounded-md border border-[#CBD5E1] bg-[#FFFFFF] shadow-lg shadow-slate-900/10">
         <div className="relative p-5 md:p-6">
           {/* Connection status */}
           <div className="absolute right-5 top-5">
             <span
               className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-semibold ${
                 connectionStatus === "connected"
-                  ? "border-green-500/40 bg-green-500/15 text-green-400"
+                  ? "border-green-500/40 bg-green-500/15 text-green-700"
                   : connectionStatus === "checking"
                     ? "border-yellow-500/40 bg-yellow-500/15 text-yellow-400"
                     : "border-red-500/40 bg-red-500/15 text-red-400"
@@ -263,7 +263,7 @@ export default function TruckRegistrationPage() {
               type="button"
               onClick={handleReadTag}
               disabled={readingTag}
-              className={`${buttonClass} min-w-[135px] border border-[#78ead9] bg-[#a5f3e7] text-[#071412] hover:bg-[#65e6d2] disabled:cursor-not-allowed disabled:opacity-50`}
+              className={`${buttonClass} min-w-[135px] border border-[#0E7490] bg-[#0E7490] text-[#FFFFFF] hover:bg-[#0891B2] disabled:cursor-not-allowed disabled:opacity-50`}
             >
               {readingTag ? "Reading..." : "Read Tag"}
             </button>
@@ -279,24 +279,24 @@ export default function TruckRegistrationPage() {
 
           {/* Response message */}
           {message && (
-            <div className="mt-5 rounded-md border border-[#315b57] bg-[#101716] px-4 py-3 text-sm text-[#a5f3e7]">
+            <div className="mt-5 rounded-md border border-[#CBD5E1] bg-[#F1F5F9] px-4 py-3 text-sm text-[#0E7490]">
               {message}
             </div>
           )}
 
           {/* Register section */}
-          <div className="mt-7 border-t border-[#344542] pt-5">
+          <div className="mt-7 border-t border-[#CBD5E1] pt-5">
             <button
               type="button"
               onClick={handleRegister}
               disabled={registering}
-              className={`${buttonClass} min-w-[130px] border border-[#65e6d2] bg-[#16a085] text-white hover:bg-[#19b99a] disabled:cursor-not-allowed disabled:opacity-50`}
+              className={`${buttonClass} min-w-[130px] border border-[#0891B2] bg-[#16a085] text-white hover:bg-[#19b99a] disabled:cursor-not-allowed disabled:opacity-50`}
             >
               {registering ? "REGISTERING..." : "REGISTER"}
             </button>
           </div>
 
-          <div className="mt-5 border-t border-[#344542]" />
+          <div className="mt-5 border-t border-[#CBD5E1]" />
         </div>
       </div>
     </div>

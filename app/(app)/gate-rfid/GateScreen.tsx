@@ -38,194 +38,194 @@ export default function GateScreen({ gates }: { gates: Gate[] }) {
 
   // LIVE STATUS: Sequential polling with exponential backoff
   // LIVE STATUS: Cancellable polling with exponential backoff
-useEffect(() => {
-  if (!sid) return;
+  useEffect(() => {
+    if (!sid) return;
 
-  const lifecycle = new AbortController();
+    const lifecycle = new AbortController();
 
-  let retryDelay = INITIAL_RETRY;
-  let activeRequest: AbortController | null = null;
+    let retryDelay = INITIAL_RETRY;
+    let activeRequest: AbortController | null = null;
 
-  setLive(null);
-  setErr("");
+    setLive(null);
+    setErr("");
 
-  // Wait until the browser tab becomes visible.
-  // The listener is always removed when resolved or cancelled.
-  const waitUntilVisible = (): Promise<boolean> => {
-    if (lifecycle.signal.aborted) {
-      return Promise.resolve(false);
-    }
+    // Wait until the browser tab becomes visible.
+    // The listener is always removed when resolved or cancelled.
+    const waitUntilVisible = (): Promise<boolean> => {
+      if (lifecycle.signal.aborted) {
+        return Promise.resolve(false);
+      }
 
-    if (!document.hidden) {
-      return Promise.resolve(true);
-    }
+      if (!document.hidden) {
+        return Promise.resolve(true);
+      }
 
-    return new Promise((resolve) => {
-      const cleanup = () => {
-        document.removeEventListener("visibilitychange", checkVisibility);
-        lifecycle.signal.removeEventListener("abort", handleAbort);
-      };
+      return new Promise((resolve) => {
+        const cleanup = () => {
+          document.removeEventListener("visibilitychange", checkVisibility);
+          lifecycle.signal.removeEventListener("abort", handleAbort);
+        };
 
-      const checkVisibility = () => {
-        if (!document.hidden) {
+        const checkVisibility = () => {
+          if (!document.hidden) {
+            cleanup();
+            resolve(true);
+          }
+        };
+
+        const handleAbort = () => {
+          cleanup();
+          resolve(false);
+        };
+
+        document.addEventListener("visibilitychange", checkVisibility);
+        lifecycle.signal.addEventListener("abort", handleAbort, { once: true });
+
+        // Check again in case visibility changed during listener setup.
+        checkVisibility();
+
+        if (lifecycle.signal.aborted) {
+          handleAbort();
+        }
+      });
+    };
+
+    // Cancellable delay: switching gates or leaving the page
+    // immediately stops the pending wait.
+    const delay = (ms: number): Promise<boolean> => {
+      return new Promise((resolve) => {
+        if (lifecycle.signal.aborted) {
+          resolve(false);
+          return;
+        }
+
+        const timer = setTimeout(() => {
           cleanup();
           resolve(true);
+        }, ms);
+
+        const handleAbort = () => {
+          clearTimeout(timer);
+          cleanup();
+          resolve(false);
+        };
+
+        const cleanup = () => {
+          lifecycle.signal.removeEventListener("abort", handleAbort);
+        };
+
+        lifecycle.signal.addEventListener("abort", handleAbort, {
+          once: true,
+        });
+
+        if (lifecycle.signal.aborted) {
+          handleAbort();
         }
-      };
-
-      const handleAbort = () => {
-        cleanup();
-        resolve(false);
-      };
-
-      document.addEventListener("visibilitychange", checkVisibility);
-      lifecycle.signal.addEventListener("abort", handleAbort, { once: true });
-
-      // Check again in case visibility changed during listener setup.
-      checkVisibility();
-
-      if (lifecycle.signal.aborted) {
-        handleAbort();
-      }
-    });
-  };
-
-  // Cancellable delay: switching gates or leaving the page
-  // immediately stops the pending wait.
-  const delay = (ms: number): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (lifecycle.signal.aborted) {
-        resolve(false);
-        return;
-      }
-
-      const timer = setTimeout(() => {
-        cleanup();
-        resolve(true);
-      }, ms);
-
-      const handleAbort = () => {
-        clearTimeout(timer);
-        cleanup();
-        resolve(false);
-      };
-
-      const cleanup = () => {
-        lifecycle.signal.removeEventListener("abort", handleAbort);
-      };
-
-      lifecycle.signal.addEventListener("abort", handleAbort, {
-        once: true,
       });
+    };
 
-      if (lifecycle.signal.aborted) {
-        handleAbort();
+    const handleVisibility = () => {
+      if (document.hidden) {
+        activeRequest?.abort();
       }
-    });
-  };
+    };
 
-  const handleVisibility = () => {
-    if (document.hidden) {
-      activeRequest?.abort();
-    }
-  };
+    document.addEventListener("visibilitychange", handleVisibility);
 
-  document.addEventListener("visibilitychange", handleVisibility);
+    const poll = async () => {
+      while (!lifecycle.signal.aborted) {
+        const visible = await waitUntilVisible();
 
-  const poll = async () => {
-    while (!lifecycle.signal.aborted) {
-      const visible = await waitUntilVisible();
+        if (!visible || lifecycle.signal.aborted) break;
 
-      if (!visible || lifecycle.signal.aborted) break;
+        const requestController = new AbortController();
+        activeRequest = requestController;
 
-      const requestController = new AbortController();
-      activeRequest = requestController;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        let success = false;
+        let failed = false;
 
-      let timeout: ReturnType<typeof setTimeout> | undefined;
-      let success = false;
-      let failed = false;
+        try {
+          timeout = setTimeout(() => {
+            requestController.abort();
+          }, REQUEST_TIMEOUT);
 
-      try {
-        timeout = setTimeout(() => {
-          requestController.abort();
-        }, REQUEST_TIMEOUT);
+          const response = await fetch(
+            `/api/gate-status?id=${sid}`,
+            {
+              cache: "no-store",
+              signal: requestController.signal,
+            }
+          );
 
-        const response = await fetch(
-          `/api/gate-status?id=${sid}`,
-          {
-            cache: "no-store",
-            signal: requestController.signal,
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+              errorData.message || `HTTP ${response.status}`
+            );
           }
+
+          const data: Live = await response.json();
+
+          if (lifecycle.signal.aborted) break;
+
+          if (requestController.signal.aborted) {
+            if (document.hidden) continue;
+            throw new Error("Gate status request timed out");
+          }
+
+          if (data.error) {
+            throw new Error("Gate status unavailable");
+          }
+
+          if (!data.SID || Number(data.SID) === sid) {
+            setLive(data);
+            setErr("");
+            success = true;
+          } else {
+            throw new Error("Received data for another gate");
+          }
+        } catch (error) {
+          if (lifecycle.signal.aborted) break;
+
+          // A hidden tab intentionally cancels its active request.
+          if (document.hidden && requestController.signal.aborted) {
+            continue;
+          }
+
+          failed = true;
+          console.error("Gate status error:", error);
+          setErr("Disconnected - retrying...");
+        } finally {
+          if (timeout) clearTimeout(timeout);
+
+          if (activeRequest === requestController) {
+            activeRequest = null;
+          }
+        }
+
+        if (success) {
+          retryDelay = INITIAL_RETRY;
+        } else if (failed) {
+          retryDelay = Math.min(retryDelay * 2, MAX_RETRY);
+        }
+
+        const waited = await delay(
+          success ? SUCCESS_INTERVAL : retryDelay
         );
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.message || `HTTP ${response.status}`
-          );
-        }
-
-        const data: Live = await response.json();
-
-        if (lifecycle.signal.aborted) break;
-
-        if (requestController.signal.aborted) {
-          if (document.hidden) continue;
-          throw new Error("Gate status request timed out");
-        }
-
-        if (data.error) {
-          throw new Error("Gate status unavailable");
-        }
-
-        if (!data.SID || Number(data.SID) === sid) {
-          setLive(data);
-          setErr("");
-          success = true;
-        } else {
-          throw new Error("Received data for another gate");
-        }
-      } catch (error) {
-        if (lifecycle.signal.aborted) break;
-
-        // A hidden tab intentionally cancels its active request.
-        if (document.hidden && requestController.signal.aborted) {
-          continue;
-        }
-
-        failed = true;
-        console.error("Gate status error:", error);
-        setErr("Disconnected - retrying...");
-      } finally {
-        if (timeout) clearTimeout(timeout);
-
-        if (activeRequest === requestController) {
-          activeRequest = null;
-        }
+        if (!waited) break;
       }
+    };
 
-      if (success) {
-        retryDelay = INITIAL_RETRY;
-      } else if (failed) {
-        retryDelay = Math.min(retryDelay * 2, MAX_RETRY);
-      }
+    void poll();
 
-      const waited = await delay(
-        success ? SUCCESS_INTERVAL : retryDelay
-      );
-
-      if (!waited) break;
-    }
-  };
-
-  void poll();
-
-  return () => {
-    lifecycle.abort();
-    activeRequest?.abort();
-    document.removeEventListener("visibilitychange", handleVisibility);
-  };
-}, [sid]);
+    return () => {
+      lifecycle.abort();
+      activeRequest?.abort();
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [sid]);
 
   // HISTORICAL RECORDS: Fetch only when gate changes
   // or the user manually refreshes.
@@ -288,13 +288,13 @@ useEffect(() => {
     };
   }, [sid, refreshKey, loadRecords]);
 
- const devices: [string, unknown, unknown][] = (
-  [
-    ["Reader", live?.RFIDIP, live?.RFIDSTATUS],
-    ["DSP", live?.DSPIP, live?.DSPSTATUS],
-    ["DIO", live?.DIOIP, live?.DIOSTATUS],
-  ] as [string, unknown, unknown][]
-).filter((device) => Boolean(device[1]));
+  const devices: [string, unknown, unknown][] = (
+    [
+      ["Reader", live?.RFIDIP, live?.RFIDSTATUS],
+      ["DSP", live?.DSPIP, live?.DSPSTATUS],
+      ["DIO", live?.DIOIP, live?.DIOSTATUS],
+    ] as [string, unknown, unknown][]
+  ).filter((device) => Boolean(device[1]));
 
   const Row = ({
     k,
@@ -317,11 +317,10 @@ useEffect(() => {
           <button
             key={g.SID}
             onClick={() => setSid(g.SID)}
-            className={`rounded-lg px-3 py-1.5 text-sm ${
-              g.SID === sid
+            className={`rounded-lg px-3 py-1.5 text-sm ${g.SID === sid
                 ? "bg-accent font-semibold text-page"
                 : "bg-pill text-pill-text"
-            }`}
+              }`}
           >
             {g.LOCATION}
           </button>
@@ -342,45 +341,30 @@ useEffect(() => {
           </div>
 
           <span
-            className={`rounded px-3 py-1 text-sm ${
-              err ? "bg-badge" : "bg-teal"
-            }`}
+            className={`rounded px-3 py-1 text-sm ${err ? "bg-badge" : "bg-teal"
+              }`}
           >
             {err || (live ? "Connected" : "Connecting…")}
           </span>
         </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6">
           <div>
             <Row
-              k="Last Truck No"
-              v={
-                <span className="text-xl text-accent">
-                  {live?.TRKNO}
-                </span>
-              }
+              k="Last Truck No:"
+              v={<span className="text-xl text-accent">{live?.TRKNO}</span>}
             />
 
-            <Row k="RFID No" v={live?.RFNO} />
-            <Row k="Status" v={live?.DATASTATUS} />
-          </div>
-
-          <div>
-            <Row k="Current RFTAG" v={live?.CURRENTRFID} />
-            <Row k="Current Process" v={live?.timestamp} />
+            <Row k="Current RFTAG:" v={live?.CURRENTRFID} />
+            <Row k="RFID No:" v={live?.RFNO} />
+            <Row k="Current Process:" v={live?.timestamp} />
+            <Row k="Status:" v={live?.DATASTATUS} />
 
             {devices.map(([name, ip, status]) => (
               <Row
                 key={name}
                 k={`${name} ${ip}`}
                 v={
-                  <span
-                    className={
-                      status
-                        ? "text-accent"
-                        : "text-badge"
-                    }
-                  >
+                  <span className={status ? "text-accent" : "text-badge"}>
                     {status ? "Healthy" : "Network Issue"}
                   </span>
                 }
@@ -388,6 +372,7 @@ useEffect(() => {
             ))}
           </div>
         </div>
+
       </div>
 
       {/* LAST 60 RECORDS */}

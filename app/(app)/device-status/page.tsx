@@ -45,7 +45,7 @@ function Health({ value }: { value: unknown }) {
 
   return (
     <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
-      <span className={healthy ? "text-green-400" : "text-red-400"}>
+      <span className={healthy ? "text-green-700" : "text-red-400"}>
         {healthy ? "Healthy" : "Network Issue"}
       </span>
       <span className={`h-3 w-3 rounded-sm ${healthy ? "bg-green-500" : "bg-red-500"}`} />
@@ -62,9 +62,9 @@ function ConnectionBadge({
 }) {
   const styles =
     connected === null
-      ? "border-white/10 bg-white/5 text-gray-400"
+      ? "border-slate-200 bg-slate-100 text-slate-500"
       : connected
-        ? "border-green-500/30 bg-green-500/10 text-green-400"
+        ? "border-green-500/30 bg-green-500/10 text-green-700"
         : "border-red-500/30 bg-red-500/10 text-red-400";
 
   return (
@@ -112,7 +112,7 @@ function parseControllerResponse(raw: unknown, id: number): DeviceData {
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between border-b border-teal/30 bg-[#202624] px-4 py-3">
+    <div className="flex items-center justify-between border-b border-teal/30 bg-[#F1F5F9] px-4 py-3">
       <h2 className="font-bold text-accent">{children}</h2>
     </div>
   );
@@ -120,15 +120,15 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 
 function TableHeader({ children }: { children: React.ReactNode }) {
   return (
-    <th className="whitespace-nowrap border border-white/10 bg-[#245f56] px-3 py-3 text-center text-xs font-bold text-white">
-      {children}
+    <th className="whitespace-nowrap border border-slate-200 bg-[#0E7490] px-3 py-3 text-center text-xs font-bold text-white">
+       {children}
     </th>
   );
 }
 
 function TableCell({ children }: { children: React.ReactNode }) {
   return (
-    <td className="whitespace-nowrap border border-white/10 px-3 py-3 text-center text-sm">
+    <td className="whitespace-nowrap border border-slate-200 px-3 py-3 text-center text-sm">
       {children}
     </td>
   );
@@ -320,7 +320,7 @@ export default function DeviceStatus() {
       </div>
 
       {/* GATE DEVICE STATUS */}
-      <section className="card overflow-hidden rounded-xl border border-teal/40 shadow-lg shadow-black/20">
+      <section className="card overflow-hidden rounded-xl border border-teal/40 shadow-lg shadow-slate-900/10">
         <SectionHeader>Gate Device Status</SectionHeader>
 
         <div className="overflow-x-auto">
@@ -355,7 +355,7 @@ export default function DeviceStatus() {
 
                   <tr
                     key={`${row.LOCATION ?? "gate"}-${index}`}
-                    className="border-t border-white/10 transition-colors hover:bg-teal/5"
+                    className="border-t border-slate-200 transition-colors hover:bg-teal/5"
                   >
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{valueOrDash(row.LOCATION)}</TableCell>
@@ -372,7 +372,7 @@ export default function DeviceStatus() {
       </section>
 
       {/* WEIGHBRIDGE DEVICE STATUS */}
-      <section className="card overflow-hidden rounded-xl border border-teal/40 shadow-lg shadow-black/20">
+      <section className="card overflow-hidden rounded-xl border border-teal/40 shadow-lg shadow-slate-900/10">
         <SectionHeader>Weighbridge Device Status</SectionHeader>
 
         <div className="overflow-x-auto">
@@ -421,7 +421,7 @@ export default function DeviceStatus() {
                   return (
                     <tr
                       key={wb.WBID}
-                      className="border-t border-white/10 transition-colors hover:bg-teal/5"
+                      className="border-t border-slate-200 transition-colors hover:bg-teal/5"
                     >
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{wb.LOCNAME}</TableCell>
@@ -449,7 +449,7 @@ export default function DeviceStatus() {
                           <TableCell><Health value={d.WBCTRSTAT} /></TableCell>
                         </>
                       ) : (
-                        <td colSpan={12} className="border border-white/10 px-4 py-3 text-center">
+                        <td colSpan={12} className="border border-slate-200 px-4 py-3 text-center">
                           <span className="text-sm font-semibold text-red-400">
                             Connection failed
                           </span>

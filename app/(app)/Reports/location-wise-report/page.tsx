@@ -178,8 +178,8 @@ export default function LocationWiseReportPage() {
   }
 
   const card: React.CSSProperties = {
-    background: "#1a1a1a",
-    border: "1px solid #303030",
+    background: "#FFFFFF",
+    border: "1px solid #CBD5E1",
     borderRadius: 10,
     padding: 20,
     marginBottom: 20,
@@ -188,10 +188,10 @@ export default function LocationWiseReportPage() {
   const input: React.CSSProperties = {
     width: "100%",
     padding: "10px 12px",
-    border: "1px solid #383838",
+    border: "1px solid #CBD5E1",
     borderRadius: 6,
-    background: "#111",
-    color: "#fff",
+    background: "#F1F5F9",
+    color: "#0F172A",
     fontSize: 14,
   };
 
@@ -199,34 +199,34 @@ export default function LocationWiseReportPage() {
     padding: "10px 18px",
     border: 0,
     borderRadius: 6,
-    background: "#a8e6d9",
-    color: "#050505",
+    background: "#0E7490",
+    color: "#FFFFFF",
     cursor: "pointer",
     fontWeight: 700,
   };
 
   const th: React.CSSProperties = {
     padding: 12,
-    background: "#252525",
-    color: "#a8e6d9",
+    background: "#F1F5F9",
+    color: "#0E7490",
     textAlign: "center",
     fontSize: 12,
     whiteSpace: "nowrap",
-    borderBottom: "1px solid #383838",
+    borderBottom: "1px solid #CBD5E1",
   };
 
   const td: React.CSSProperties = {
     padding: 12,
     textAlign: "center",
     fontSize: 13,
-    color: "#fff",
-    borderBottom: "1px solid #303030",
+    color: "#0F172A",
+    borderBottom: "1px solid #CBD5E1",
     whiteSpace: "nowrap",
   };
 
   return (
-    <main style={{ padding: 24, background: "#050505", minHeight: "100vh", color: "#fff" }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: "#a8e6d9", marginBottom: 24 }}>
+    <main style={{ padding: 24, background: "#F8FAFC", minHeight: "100vh", color: "#0F172A" }}>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: "#0E7490", marginBottom: 24 }}>
         LOCATION WISE REPORT
       </h1>
 
@@ -305,7 +305,7 @@ export default function LocationWiseReportPage() {
         </button>
 
         {error && (
-          <p style={{ color: "#f87171", marginTop: 15, fontSize: 13 }}>
+          <p style={{ color: "#DC2626", marginTop: 15, fontSize: 13 }}>
             {error}
           </p>
         )}
@@ -314,7 +314,7 @@ export default function LocationWiseReportPage() {
       {searched && (
         <section style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-            <h2 style={{ color: "#a8e6d9", fontWeight: 700 }}>Report Details</h2>
+            <h2 style={{ color: "#0E7490", fontWeight: 700 }}>Report Details</h2>
             <button onClick={exportExcel} style={button}>Export Excel</button>
           </div>
 
@@ -369,7 +369,7 @@ export default function LocationWiseReportPage() {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
-            <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+            <span style={{ color: "#64748B", fontSize: 13 }}>
               Showing {filteredRows.length ? (page - 1) * pageSize + 1 : 0} - {Math.min(page * pageSize, filteredRows.length)} of {filteredRows.length} records
             </span>
 

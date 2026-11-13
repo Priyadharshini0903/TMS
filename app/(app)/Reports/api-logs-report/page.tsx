@@ -105,28 +105,28 @@ export default function APILogsReport() {
   };
 
   const inputStyle = {
-    background: "#1a1a1a",
-    color: "#fff",
-    border: "1px solid #333",
+    background: "#FFFFFF",
+    color: "#0F172A",
+    border: "1px solid #CBD5E1",
     borderRadius: 8,
     padding: "10px 12px",
     outline: "none",
   };
 
   return (
-    <div style={{ padding: 24, color: "#fff", background: "#050505", minHeight: "100vh" }}>
+    <div style={{ padding: 24, color: "#0F172A", background: "#F8FAFC", minHeight: "100vh" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700 }}>API Logs Report</h1>
-          <p style={{ color: "#8a8f8d", marginTop: 6 }}>
+          <p style={{ color: "#64748B", marginTop: 6 }}>
             Monitor API requests, responses and errors
           </p>
         </div>
 
         <button
           onClick={exportCSV}
-          style={{ background: "#a8e6d9", color: "#050505", padding: "10px 18px", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}
+          style={{ background: "#0E7490", color: "#FFFFFF", padding: "10px 18px", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}
         >
           Export CSV
         </button>
@@ -172,14 +172,14 @@ export default function APILogsReport() {
       </div>
 
       {/* Table */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #292929", borderRadius: 12, overflowX: "auto" }}>
+      <div style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 12, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1200 }}>
           <thead>
             <tr>
               {headers.map((heading: string) => (
                 <th
                   key={heading}
-                  style={{ padding: 14, textAlign: "left", color: "#a8e6d9", borderBottom: "1px solid #333", fontSize: 12 }}>
+                  style={{ padding: 14, textAlign: "left", color: "#0E7490", borderBottom: "1px solid #CBD5E1", fontSize: 12 }}>
                   {heading}
                 </th>
               ))}
@@ -202,7 +202,7 @@ export default function APILogsReport() {
                 ].map((value, index) => (
                   <td
                     key={index}
-                    style={{ padding: 14, borderBottom: "1px solid #292929", fontSize: 13, color: "#cfd4d2" }}
+                    style={{ padding: 14, borderBottom: "1px solid #CBD5E1", fontSize: 13, color: "#334155" }}
                   >
                     {value}
                   </td>
@@ -212,7 +212,7 @@ export default function APILogsReport() {
 
             {paginatedData.length === 0 && (
               <tr>
-                <td colSpan={headers.length} style={{ padding: 30, textAlign: "center", color: "#8a8f8d" }}>
+                <td colSpan={headers.length} style={{ padding: 30, textAlign: "center", color: "#64748B" }}>
                   No records found
                 </td>
               </tr>
@@ -223,7 +223,7 @@ export default function APILogsReport() {
 
       {/* Pagination */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18, flexWrap: "wrap", gap: 12 }}>
-        <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+        <span style={{ color: "#64748B", fontSize: 13 }}>
           Showing {filteredData.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} records
         </span>
 
@@ -236,7 +236,7 @@ export default function APILogsReport() {
             Previous
           </button>
 
-          <span style={{ padding: "10px 12px", color: "#a8e6d9" }}>
+          <span style={{ padding: "10px 12px", color: "#0E7490" }}>
             {currentPage} / {totalPages}
           </span>
 

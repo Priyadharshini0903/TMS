@@ -131,9 +131,9 @@ function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-[#294c46] bg-[#191d1c]">
-      <div className="border-b border-[#294c46] px-4 py-3">
-        <h2 className="text-center text-sm font-bold tracking-wide text-[#b8f3e8]">
+    <section className="overflow-hidden rounded-xl border border-[#CBD5E1] bg-[#FFFFFF]">
+      <div className="border-b border-[#CBD5E1] px-4 py-3">
+        <h2 className="text-center text-sm font-bold tracking-wide text-[#0E7490]">
           {title}
         </h2>
       </div>
@@ -244,24 +244,24 @@ export default function BulkerPage() {
     data[key as keyof BulkerData] ?? 0;
 
   return (
-    <div className="h-[calc(100vh-48px)] overflow-hidden bg-black p-3 text-[#b8f3e8]">
+    <div className="h-[calc(100vh-48px)] overflow-hidden bg-[#F8FAFC] p-3 text-[#0E7490]">
 
       {/* Page heading and menu */}
       <div className="mb-3 space-y-2">
-        <h1 className="text-base font-semibold text-[#b8f3e8]">
+        <h1 className="text-base font-semibold text-[#0E7490]">
           Bulker(s)
         </h1>
 
         <div className="flex flex-wrap items-center gap-2">
           <button
-            className="rounded-md bg-[#a6e8dc] px-4 py-2 text-sm font-semibold text-black"
+            className="rounded-md bg-[#0E7490] px-4 py-2 text-sm font-semibold text-white"
           >
             BULKER {bulkerId}
           </button>
 
           <button
             onClick={() => setModal("settings")}
-            className="rounded-md bg-[#292d2c] px-4 py-2 text-sm text-gray-200 transition hover:bg-[#205e55]"
+            className="rounded-md bg-[#F1F5F9] px-4 py-2 text-sm text-slate-700 transition hover:bg-[#E2E8F0]"
           >
             SETTINGS
           </button>
@@ -269,15 +269,15 @@ export default function BulkerPage() {
       </div>
 
       {/* Main Bulker panel */}
-      <div className="overflow-hidden rounded-xl border border-[#294c46] bg-[#191d1c]">
+      <div className="overflow-hidden rounded-xl border border-[#CBD5E1] bg-[#FFFFFF]">
 
         {/* RFID, Truck and Bulker header */}
-        <div className="grid grid-cols-1 items-center gap-3 border-b border-[#294c46] p-2 lg:grid-cols-12">
+        <div className="grid grid-cols-1 items-center gap-3 border-b border-[#CBD5E1] p-2 lg:grid-cols-12">
 
           <div className="lg:col-span-2">
             <button
               onClick={getLastRecords}
-              className="w-full rounded-md bg-[#a6e8dc] px-3 py-2 text-sm font-semibold text-black transition hover:bg-[#80d7c8]"
+              className="w-full rounded-md bg-[#0E7490] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#0891B2]"
             >
               ☷ Show Last 60 Records
             </button>
@@ -288,7 +288,7 @@ export default function BulkerPage() {
               readOnly
               value={data.RFNO ?? ""}
               placeholder="RFID No."
-              className="w-full rounded-md border border-[#343d39] bg-[#242a28] px-3 py-3 text-center text-lg text-[#b8f3e8] outline-none placeholder:text-gray-400"
+              className="w-full rounded-md border border-[#CBD5E1] bg-[#F1F5F9] px-3 py-3 text-center text-lg text-[#0E7490] outline-none placeholder:text-gray-400"
             />
           </div>
 
@@ -297,19 +297,19 @@ export default function BulkerPage() {
               readOnly
               value={data.TRKNO ?? ""}
               placeholder="Truck No."
-              className="w-full rounded-md border border-[#343d39] bg-[#242a28] px-3 py-3 text-center text-lg text-[#b8f3e8] outline-none placeholder:text-gray-400"
+              className="w-full rounded-md border border-[#CBD5E1] bg-[#F1F5F9] px-3 py-3 text-center text-lg text-[#0E7490] outline-none placeholder:text-gray-400"
             />
           </div>
 
           <div className="text-center lg:col-span-2">
-            <p className="text-2xl font-bold text-[#b8f3e8]">
+            <p className="text-2xl font-bold text-[#0E7490]">
               Bulker - {bulkerId}
             </p>
           </div>
         </div>
 
         {/* Compact PLC, TMS, CLR and Load Cell row */}
-        <div className="flex flex-wrap items-center gap-4 border-b border-[#294c46] px-4 py-4">
+        <div className="flex flex-wrap items-center gap-4 border-b border-[#CBD5E1] px-4 py-4">
 
           {/* PLC */}
           <div
@@ -328,7 +328,7 @@ export default function BulkerPage() {
             <input
               readOnly
               value={data.TCPCNT ?? 0}
-              className="w-20 rounded-md border border-[#343d39] bg-[#242a28] p-2 text-center text-lg text-[#b8f3e8] outline-none"
+              className="w-20 rounded-md border border-[#CBD5E1] bg-[#F1F5F9] p-2 text-center text-lg text-[#0E7490] outline-none"
             />
           </div>
 
@@ -338,7 +338,7 @@ export default function BulkerPage() {
             <input
               readOnly
               value={data.CLRCNT ?? 0}
-              className="w-20 rounded-md border border-[#343d39] bg-[#242a28] p-2 text-center text-lg text-[#b8f3e8] outline-none"
+              className="w-20 rounded-md border border-[#CBD5E1] bg-[#F1F5F9] p-2 text-center text-lg text-[#0E7490] outline-none"
             />
           </div>
 
@@ -351,7 +351,7 @@ export default function BulkerPage() {
         </div>
 
         {/* Weight, Inputs and Outputs */}
-        <div className="grid grid-cols-1 gap-3 bg-black p-2 xl:grid-cols-12">
+        <div className="grid grid-cols-1 gap-3 bg-[#F1F5F9] p-2 xl:grid-cols-12">
 
           {/* Weight details */}
           <div className="xl:col-span-4">
@@ -362,7 +362,7 @@ export default function BulkerPage() {
                     {weightRows.map((row) => (
                       <tr
                         key={row.key}
-                        className="border-b border-[#343d39] even:bg-[#242a28]"
+                        className="border-b border-[#CBD5E1] even:bg-[#F1F5F9]"
                       >
                         <td className="px-2 py-1.5 text-xs font-semibold text-gray-300">
                           {row.label}
@@ -376,12 +376,12 @@ export default function BulkerPage() {
                       </tr>
                     ))}
 
-                    <tr className="bg-[#242a28]">
+                    <tr className="bg-[#F1F5F9]">
                       <td className="px-3 py-3 font-semibold text-gray-300">
                         CURRENT RFNO
                       </td>
 
-                      <td className="break-all px-3 py-3 text-right font-bold text-[#b8f3e8]">
+                      <td className="break-all px-3 py-3 text-right font-bold text-[#0E7490]">
                         {data.RFCURTAG ?? ""}
                       </td>
                     </tr>
@@ -396,7 +396,7 @@ export default function BulkerPage() {
             <Panel title="INPUTS">
               <table className="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr className="border-b border-[#294c46] text-[#b8f3e8]">
+                  <tr className="border-b border-[#CBD5E1] text-[#0E7490]">
                     <th className="px-2 py-1.5 text-left">INPUTS</th>
                     <th className="px-2 py-3 text-center">STATUS</th>
                   </tr>
@@ -406,7 +406,7 @@ export default function BulkerPage() {
                   {inputRows.map((row) => (
                     <tr
                       key={row.key}
-                      className="border-b border-[#343d39] even:bg-[#242a28]"
+                      className="border-b border-[#CBD5E1] even:bg-[#F1F5F9]"
                     >
                       <td className="px-2 py-3 text-gray-300">
                         {row.label}
@@ -425,7 +425,7 @@ export default function BulkerPage() {
               </table>
 
               {/* Current status */}
-              <div className="mt-2 rounded-lg border border-[#294c46] bg-black px-3 py-2">
+              <div className="mt-2 rounded-lg border border-[#CBD5E1] bg-black px-3 py-2">
                 <p className="mb-2 text-xs text-gray-500">
                   CURRENT STATUS
                 </p>
@@ -443,7 +443,7 @@ export default function BulkerPage() {
             <Panel title="OUTPUTS">
               <table className="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr className="border-b border-[#294c46] text-[#b8f3e8]">
+                  <tr className="border-b border-[#CBD5E1] text-[#0E7490]">
                     <th className="px-2 py-1.5 text-left">OUTPUTS</th>
                     <th className="px-2 py-3 text-center">STATUS</th>
                   </tr>
@@ -453,7 +453,7 @@ export default function BulkerPage() {
                   {outputRows.map((row) => (
                     <tr
                       key={row.key}
-                      className="border-b border-[#343d39] even:bg-[#242a28]"
+                      className="border-b border-[#CBD5E1] even:bg-[#F1F5F9]"
                     >
                       <td className="px-2 py-3 text-gray-300">
                         {row.label}
@@ -476,7 +476,7 @@ export default function BulkerPage() {
       </div>
 
       {/* Connection information */}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#294c46] bg-[#191d1c] px-4 py-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#CBD5E1] bg-[#FFFFFF] px-4 py-3 text-sm">
         <span
           className={
             connectionError ? "text-red-400" : "text-emerald-400"
@@ -496,10 +496,10 @@ export default function BulkerPage() {
       {/* Last 60 Records modal */}
       {modal === "records" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="w-full max-w-6xl overflow-hidden rounded-xl border border-[#294c46] bg-[#191d1c] shadow-2xl">
+          <div className="w-full max-w-6xl overflow-hidden rounded-xl border border-[#CBD5E1] bg-[#FFFFFF] shadow-2xl">
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#294c46] px-5 py-4">
-              <h2 className="text-lg font-bold text-[#b8f3e8]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#CBD5E1] px-5 py-4">
+              <h2 className="text-lg font-bold text-[#0E7490]">
                 LAST 60 RECORDS
               </h2>
 
@@ -519,7 +519,7 @@ export default function BulkerPage() {
 
             <div className="max-h-[70vh] overflow-auto p-4">
               {recordsLoading ? (
-                <p className="py-10 text-center text-[#b8f3e8]">
+                <p className="py-10 text-center text-[#0E7490]">
                   Loading records...
                 </p>
               ) : recordsError ? (
@@ -529,7 +529,7 @@ export default function BulkerPage() {
               ) : (
                 <>
                   <table className="w-full border-collapse text-sm">
-                    <thead className="sticky top-0 bg-[#191d1c] text-[#b8f3e8]">
+                    <thead className="sticky top-0 bg-[#FFFFFF] text-[#0E7490]">
                       <tr>
                         {[
                           "Sno",
@@ -541,7 +541,7 @@ export default function BulkerPage() {
                         ].map((heading) => (
                           <th
                             key={heading}
-                            className="border-b border-[#294c46] px-3 py-3 text-left"
+                            className="border-b border-[#CBD5E1] px-3 py-3 text-left"
                           >
                             {heading}
                           </th>
@@ -553,13 +553,13 @@ export default function BulkerPage() {
                       {records.map((record, index) => (
                         <tr
                           key={index}
-                          className="border-b border-[#343d39] even:bg-[#242a28] hover:bg-[#293d38]"
+                          className="border-b border-[#CBD5E1] even:bg-[#F1F5F9] hover:bg-[#E0F2FE]"
                         >
                           <td className="px-3 py-3 text-center text-gray-300">
                             {index + 1}
                           </td>
 
-                          <td className="break-all px-3 py-3 text-[#b8f3e8]">
+                          <td className="break-all px-3 py-3 text-[#0E7490]">
                             {record.RFNO}
                           </td>
 
@@ -592,10 +592,10 @@ export default function BulkerPage() {
               )}
             </div>
 
-            <div className="border-t border-[#294c46] p-3 text-right">
+            <div className="border-t border-[#CBD5E1] p-3 text-right">
               <button
                 onClick={() => setModal(null)}
-                className="rounded-md bg-[#a6e8dc] px-5 py-2 font-semibold text-black hover:bg-[#80d7c8]"
+                className="rounded-md bg-[#0E7490] px-5 py-2 font-semibold text-white hover:bg-[#0891B2]"
               >
                 CLOSE
               </button>
@@ -607,10 +607,10 @@ export default function BulkerPage() {
       {/* Settings placeholder */}
       {modal === "settings" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="w-full max-w-lg overflow-hidden rounded-xl border border-[#294c46] bg-[#191d1c] shadow-2xl">
+          <div className="w-full max-w-lg overflow-hidden rounded-xl border border-[#CBD5E1] bg-[#FFFFFF] shadow-2xl">
 
-            <div className="flex items-center justify-between border-b border-[#294c46] px-5 py-4">
-              <h2 className="font-bold text-[#b8f3e8]">
+            <div className="flex items-center justify-between border-b border-[#CBD5E1] px-5 py-4">
+              <h2 className="font-bold text-[#0E7490]">
                 BULKER SETTINGS
               </h2>
 
@@ -626,10 +626,10 @@ export default function BulkerPage() {
               The original Bulker settings screen and API will be connected next.
             </div>
 
-            <div className="border-t border-[#294c46] p-3 text-right">
+            <div className="border-t border-[#CBD5E1] p-3 text-right">
               <button
                 onClick={() => setModal(null)}
-                className="rounded-md bg-[#a6e8dc] px-5 py-2 font-semibold text-black hover:bg-[#80d7c8]"
+                className="rounded-md bg-[#0E7490] px-5 py-2 font-semibold text-white hover:bg-[#0891B2]"
               >
                 CLOSE
               </button>

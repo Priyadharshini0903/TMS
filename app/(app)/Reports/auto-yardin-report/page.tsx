@@ -193,17 +193,17 @@ export default function APILogsReport() {
   };
 
   const inputStyle: React.CSSProperties = {
-    background: "#1a1a1a",
-    color: "#fff",
-    border: "1px solid #333",
+    background: "#FFFFFF",
+    color: "#0F172A",
+    border: "1px solid #CBD5E1",
     borderRadius: 8,
     padding: "10px 12px",
     outline: "none",
   };
 
   const buttonStyle: React.CSSProperties = {
-    background: "#a8e6d9",
-    color: "#050505",
+    background: "#0E7490",
+    color: "#FFFFFF",
     padding: "10px 18px",
     borderRadius: 8,
     fontWeight: 600,
@@ -213,9 +213,9 @@ export default function APILogsReport() {
 
   const tdStyle: React.CSSProperties = {
     padding: 14,
-    borderBottom: "1px solid #292929",
+    borderBottom: "1px solid #CBD5E1",
     fontSize: 13,
-    color: "#cfd4d2",
+    color: "#334155",
     verticalAlign: "top",
   };
 
@@ -223,8 +223,8 @@ export default function APILogsReport() {
     <div
       style={{
         padding: 24,
-        color: "#fff",
-        background: "#050505",
+        color: "#0F172A",
+        background: "#F8FAFC",
         minHeight: "100vh",
       }}
     >
@@ -241,7 +241,7 @@ export default function APILogsReport() {
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700 }}>API Logs Report</h1>
 
-          <p style={{ color: "#8a8f8d", marginTop: 6 }}>
+          <p style={{ color: "#64748B", marginTop: 6 }}>
             Monitor API requests, responses and transaction logs
           </p>
         </div>
@@ -354,8 +354,8 @@ export default function APILogsReport() {
       {error && (
         <div
           style={{
-            background: "#401c1c",
-            color: "#ff9999",
+            background: "#FEE2E2",
+            color: "#DC2626",
             padding: 14,
             borderRadius: 8,
             marginBottom: 18,
@@ -369,8 +369,8 @@ export default function APILogsReport() {
       {searched && (
         <div
           style={{
-            background: "#1a1a1a",
-            border: "1px solid #292929",
+            background: "#FFFFFF",
+            border: "1px solid #CBD5E1",
             borderRadius: 12,
             padding: 20,
           }}
@@ -384,11 +384,11 @@ export default function APILogsReport() {
               marginBottom: 18,
             }}
           >
-            <h2 style={{ fontSize: 17, color: "#a8e6d9", fontWeight: 700 }}>
+            <h2 style={{ fontSize: 17, color: "#0E7490", fontWeight: 700 }}>
               Report Details
             </h2>
 
-            <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+            <span style={{ color: "#64748B", fontSize: 13 }}>
               Total Records: {filteredData.length}
             </span>
           </div>
@@ -444,8 +444,8 @@ export default function APILogsReport() {
                       style={{
                         padding: 14,
                         textAlign: "left",
-                        color: "#a8e6d9",
-                        borderBottom: "1px solid #333",
+                        color: "#0E7490",
+                        borderBottom: "1px solid #CBD5E1",
                         fontSize: 12,
                         whiteSpace: "nowrap",
                       }}
@@ -505,7 +505,7 @@ export default function APILogsReport() {
                       style={{
                         padding: 30,
                         textAlign: "center",
-                        color: "#8a8f8d",
+                        color: "#64748B",
                       }}
                     >
                       {loading ? "Loading..." : "No records found"}
@@ -527,7 +527,7 @@ export default function APILogsReport() {
               gap: 12,
             }}
           >
-            <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+            <span style={{ color: "#64748B", fontSize: 13 }}>
               Showing{" "}
               {filteredData.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
               –{Math.min(currentPage * pageSize, filteredData.length)} of{" "}
@@ -546,7 +546,7 @@ export default function APILogsReport() {
                 Previous
               </button>
 
-              <span style={{ padding: "10px 12px", color: "#a8e6d9" }}>
+              <span style={{ padding: "10px 12px", color: "#0E7490" }}>
                 {currentPage} / {totalPages}
               </span>
 

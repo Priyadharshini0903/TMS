@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-page: #050505;
-  --color-accent: #a8e6d9;
-  --color-teal: #4f8f84;
-  --color-muted: #8a8f8d;
-  --color-badge: #e5484d;
-  --color-pill: #2a2a2a;
-  --color-pill-text: #cfd4d2;
+  --color-page: #F8FAFC;
+  --color-accent: #0E7490;
+  --color-teal: #0891B2;
+  --color-muted: #64748B;
+  --color-badge: #DC2626;
+  --color-pill: #E2E8F0;
+  --color-pill-text: #334155;
 }
 
 body {
   background: var(--color-page);
-  color: #fff;
+  color: #0F172A;
 }
-.card { background: linear-gradient(135deg, #1a1a1a, #1e1e1e); }
+.card { background: #fff; }

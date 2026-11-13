@@ -215,14 +215,14 @@ export default function BulkerWiseReportPage() {
       padding: "10px 18px",
       border: 0,
       borderRadius: 6,
-      background: "#0E5EAD",
-      color: "white",
+      background: "#0E7490",
+      color: "#0F172A",
       cursor: "pointer",
       fontWeight: 600,
     },
     th: {
-      background: "#0E5EAD",
-      color: "white",
+      background: "#0E7490",
+      color: "#0F172A",
       padding: 12,
       textAlign: "center",
       fontSize: 13,
@@ -242,8 +242,8 @@ export default function BulkerWiseReportPage() {
     <div style={{ padding: 24, background: "#f8fafc", minHeight: "100vh" }}>
       <div
         style={{
-          background: "#0E5EAD",
-          color: "white",
+          background: "#0E7490",
+          color: "#0F172A",
           padding: "15px 20px",
           borderRadius: 8,
           marginBottom: 20,
@@ -363,7 +363,7 @@ export default function BulkerWiseReportPage() {
               marginBottom: 18,
             }}
           >
-            <h2 style={{ color: "#0E5EAD", fontSize: 18, fontWeight: 700 }}>
+            <h2 style={{ color: "#0E7490", fontSize: 18, fontWeight: 700 }}>
               Bulker Wise Report
             </h2>
 

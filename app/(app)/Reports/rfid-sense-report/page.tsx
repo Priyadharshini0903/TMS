@@ -147,9 +147,9 @@ export default function RFIDSenseReport() {
   }
 
   const inputStyle: React.CSSProperties = {
-    background: "#1a1a1a",
-    color: "#fff",
-    border: "1px solid #333",
+    background: "#FFFFFF",
+    color: "#0F172A",
+    border: "1px solid #CBD5E1",
     borderRadius: 8,
     padding: "10px 12px",
     outline: "none",
@@ -159,8 +159,8 @@ export default function RFIDSenseReport() {
     <div
       style={{
         padding: 24,
-        color: "#fff",
-        background: "#050505",
+        color: "#0F172A",
+        background: "#F8FAFC",
         minHeight: "100vh",
       }}
     >
@@ -177,7 +177,7 @@ export default function RFIDSenseReport() {
           <h1 style={{ fontSize: 26, fontWeight: 700 }}>
             RFID Sense Report
           </h1>
-          <p style={{ color: "#8a8f8d", marginTop: 6 }}>
+          <p style={{ color: "#64748B", marginTop: 6 }}>
             RFID sensed trucks summary by stage
           </p>
         </div>
@@ -186,8 +186,8 @@ export default function RFIDSenseReport() {
           onClick={exportCSV}
           disabled={!searched || filteredData.length === 0}
           style={{
-            background: "#a8e6d9",
-            color: "#050505",
+            background: "#0E7490",
+            color: "#FFFFFF",
             padding: "10px 18px",
             borderRadius: 8,
             fontWeight: 600,
@@ -212,7 +212,7 @@ export default function RFIDSenseReport() {
           <label
             style={{
               display: "block",
-              color: "#a8e6d9",
+              color: "#0E7490",
               fontSize: 12,
               marginBottom: 6,
             }}
@@ -231,7 +231,7 @@ export default function RFIDSenseReport() {
           <label
             style={{
               display: "block",
-              color: "#a8e6d9",
+              color: "#0E7490",
               fontSize: 12,
               marginBottom: 6,
             }}
@@ -252,8 +252,8 @@ export default function RFIDSenseReport() {
           disabled={loading}
           style={{
             ...inputStyle,
-            background: "#a8e6d9",
-            color: "#050505",
+            background: "#0E7490",
+            color: "#FFFFFF",
             fontWeight: 600,
             cursor: "pointer",
             marginTop: 19,
@@ -279,7 +279,7 @@ export default function RFIDSenseReport() {
       </div>
 
       {error && (
-        <p style={{ color: "#f87171", marginBottom: 16 }}>{error}</p>
+        <p style={{ color: "#DC2626", marginBottom: 16 }}>{error}</p>
       )}
 
       {searched && (
@@ -293,19 +293,19 @@ export default function RFIDSenseReport() {
               marginBottom: 14,
             }}
           >
-            <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+            <span style={{ color: "#64748B", fontSize: 13 }}>
               From: {fromDate} &nbsp; To: {toDate}
             </span>
 
-            <span style={{ color: "#a8e6d9", fontWeight: 700 }}>
+            <span style={{ color: "#0E7490", fontWeight: 700 }}>
               Total Trucks: {totalTrucks.toLocaleString("en-IN")}
             </span>
           </div>
 
           <div
             style={{
-              background: "#1a1a1a",
-              border: "1px solid #292929",
+              background: "#FFFFFF",
+              border: "1px solid #CBD5E1",
               borderRadius: 12,
               overflowX: "auto",
             }}
@@ -325,8 +325,8 @@ export default function RFIDSenseReport() {
                       style={{
                         padding: 14,
                         textAlign: "left",
-                        color: "#a8e6d9",
-                        borderBottom: "1px solid #333",
+                        color: "#0E7490",
+                        borderBottom: "1px solid #CBD5E1",
                         fontSize: 12,
                       }}
                     >
@@ -342,9 +342,9 @@ export default function RFIDSenseReport() {
                     <td
                       style={{
                         padding: 14,
-                        borderBottom: "1px solid #292929",
+                        borderBottom: "1px solid #CBD5E1",
                         fontSize: 13,
-                        color: "#cfd4d2",
+                        color: "#334155",
                       }}
                     >
                       {(currentPage - 1) * pageSize + index + 1}
@@ -353,9 +353,9 @@ export default function RFIDSenseReport() {
                     <td
                       style={{
                         padding: 14,
-                        borderBottom: "1px solid #292929",
+                        borderBottom: "1px solid #CBD5E1",
                         fontSize: 13,
-                        color: "#cfd4d2",
+                        color: "#334155",
                       }}
                     >
                       {row.gateLoc || `Stage ${row.ID}`}
@@ -364,9 +364,9 @@ export default function RFIDSenseReport() {
                     <td
                       style={{
                         padding: 14,
-                        borderBottom: "1px solid #292929",
+                        borderBottom: "1px solid #CBD5E1",
                         fontSize: 13,
-                        color: "#cfd4d2",
+                        color: "#334155",
                       }}
                     >
                       {Number(row.trucksCount).toLocaleString("en-IN")}
@@ -381,7 +381,7 @@ export default function RFIDSenseReport() {
                       style={{
                         padding: 30,
                         textAlign: "center",
-                        color: "#8a8f8d",
+                        color: "#64748B",
                       }}
                     >
                       No records found.
@@ -397,7 +397,7 @@ export default function RFIDSenseReport() {
                         padding: 14,
                         textAlign: "right",
                         fontWeight: 700,
-                        color: "#a8e6d9",
+                        color: "#0E7490",
                       }}
                     >
                       TOTAL
@@ -406,7 +406,7 @@ export default function RFIDSenseReport() {
                       style={{
                         padding: 14,
                         fontWeight: 700,
-                        color: "#a8e6d9",
+                        color: "#0E7490",
                       }}
                     >
                       {filteredData
@@ -432,7 +432,7 @@ export default function RFIDSenseReport() {
               gap: 12,
             }}
           >
-            <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+            <span style={{ color: "#64748B", fontSize: 13 }}>
               Showing{" "}
               {filteredData.length === 0
                 ? 0
@@ -454,7 +454,7 @@ export default function RFIDSenseReport() {
                 Previous
               </button>
 
-              <span style={{ padding: "10px 12px", color: "#a8e6d9" }}>
+              <span style={{ padding: "10px 12px", color: "#0E7490" }}>
                 {currentPage} / {totalPages}
               </span>
 

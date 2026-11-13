@@ -56,9 +56,9 @@ export default function TransactionLogsReport() {
   const showLogType = transactionType !== "INBOUND";
 
   const inputStyle: React.CSSProperties = {
-    background: "#1a1a1a",
-    color: "#fff",
-    border: "1px solid #333",
+    background: "#FFFFFF",
+    color: "#0F172A",
+    border: "1px solid #CBD5E1",
     borderRadius: 8,
     padding: "10px 12px",
     outline: "none",
@@ -191,9 +191,9 @@ export default function TransactionLogsReport() {
 
   const cellStyle: React.CSSProperties = {
     padding: 13,
-    borderBottom: "1px solid #292929",
+    borderBottom: "1px solid #CBD5E1",
     fontSize: 12,
-    color: "#cfd4d2",
+    color: "#334155",
     verticalAlign: "top",
     maxWidth: 350,
     overflowWrap: "anywhere",
@@ -203,8 +203,8 @@ export default function TransactionLogsReport() {
     <div
       style={{
         padding: 24,
-        color: "#fff",
-        background: "#050505",
+        color: "#0F172A",
+        background: "#F8FAFC",
         minHeight: "100vh",
       }}
     >
@@ -223,7 +223,7 @@ export default function TransactionLogsReport() {
             Transaction Logs Report
           </h1>
 
-          <p style={{ color: "#8a8f8d", marginTop: 6 }}>
+          <p style={{ color: "#64748B", marginTop: 6 }}>
             View and track transaction logs for your plant
           </p>
         </div>
@@ -232,8 +232,8 @@ export default function TransactionLogsReport() {
           onClick={exportCSV}
           disabled={filteredData.length === 0}
           style={{
-            background: "#a8e6d9",
-            color: "#050505",
+            background: "#0E7490",
+            color: "#FFFFFF",
             padding: "10px 18px",
             borderRadius: 8,
             fontWeight: 600,
@@ -320,8 +320,8 @@ export default function TransactionLogsReport() {
           onClick={getData}
           disabled={loading}
           style={{
-            background: "#a8e6d9",
-            color: "#050505",
+            background: "#0E7490",
+            color: "#FFFFFF",
             padding: "10px 20px",
             borderRadius: 8,
             fontWeight: 600,
@@ -336,8 +336,8 @@ export default function TransactionLogsReport() {
       {error && (
         <div
           style={{
-            background: "#401c1c",
-            color: "#ff9999",
+            background: "#FEE2E2",
+            color: "#DC2626",
             padding: 14,
             borderRadius: 8,
             marginBottom: 18,
@@ -387,8 +387,8 @@ export default function TransactionLogsReport() {
       {/* Table */}
       <div
         style={{
-          background: "#1a1a1a",
-          border: "1px solid #292929",
+          background: "#FFFFFF",
+          border: "1px solid #CBD5E1",
           borderRadius: 12,
           overflowX: "auto",
         }}
@@ -408,8 +408,8 @@ export default function TransactionLogsReport() {
                   style={{
                     padding: 14,
                     textAlign: "left",
-                    color: "#a8e6d9",
-                    borderBottom: "1px solid #333",
+                    color: "#0E7490",
+                    borderBottom: "1px solid #CBD5E1",
                     fontSize: 11,
                     whiteSpace: "nowrap",
                   }}
@@ -453,7 +453,7 @@ export default function TransactionLogsReport() {
                   style={{
                     padding: 30,
                     textAlign: "center",
-                    color: "#8a8f8d",
+                    color: "#64748B",
                   }}
                 >
                   {loading
@@ -479,7 +479,7 @@ export default function TransactionLogsReport() {
           gap: 12,
         }}
       >
-        <span style={{ color: "#8a8f8d", fontSize: 13 }}>
+        <span style={{ color: "#64748B", fontSize: 13 }}>
           Showing{" "}
           {filteredData.length === 0
             ? 0
@@ -501,7 +501,7 @@ export default function TransactionLogsReport() {
             Previous
           </button>
 
-          <span style={{ padding: "10px 12px", color: "#a8e6d9" }}>
+          <span style={{ padding: "10px 12px", color: "#0E7490" }}>
             {currentPage} / {totalPages}
           </span>
 
