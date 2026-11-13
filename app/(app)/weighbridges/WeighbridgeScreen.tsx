@@ -45,7 +45,6 @@ function parseControllerResponse(raw: string, id: number): LiveData {
   return inner as LiveData;
 }
 
-
 function Signal({ green }: { green: boolean }) {
   return (
     <div className="flex flex-col items-center gap-1 rounded-sm border border-gray-300 bg-white p-1.5 shadow-md">
@@ -63,7 +62,6 @@ function Signal({ green }: { green: boolean }) {
   );
 }
 
-
 function Sensor({ label, active }: { label: string; active: boolean }) {
   return (
     <div
@@ -75,7 +73,6 @@ function Sensor({ label, active }: { label: string; active: boolean }) {
     </div>
   );
 }
-
 
 function DeviceStatus({ live }: { live: LiveData }) {
   const devices: Device[] = [
@@ -166,14 +163,14 @@ function DeviceStatus({ live }: { live: LiveData }) {
   );
 }
 
-  
-
 // LAST 60 RECORDS POPUP
 function LastRecordsModal({
   wbId,
+  mode,
   onClose,
 }: {
   wbId: number;
+  mode: "regular" | "raw";
   onClose: () => void;
 }) {
   const [records, setRecords] = useState<any[]>([]);
@@ -188,10 +185,13 @@ function LastRecordsModal({
         setLoading(true);
         setError("");
 
-        const response = await fetch(`/api/weighbridge/records?id=${wbId}`, {
-          cache: "no-store",
-          signal: controller.signal,
-        });
+        const response = await fetch(
+          `/api/weighbridge/records?id=${wbId}&mode=${mode}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
 
         const data = await response.json();
 
@@ -214,7 +214,7 @@ function LastRecordsModal({
     fetchRecords();
 
     return () => controller.abort();
-  }, [wbId]);
+  }, [wbId, mode]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -330,8 +330,10 @@ function LastRecordsModal({
 
 export default function WeighbridgeScreen({
   weighbridges,
+  mode = "regular",
 }: {
   weighbridges: Weighbridge[];
+  mode?: "regular" | "raw";
 }) {
   const [selectedId, setSelectedId] = useState<number>(
     Number(weighbridges[0]?.WBID ?? 0),
@@ -356,7 +358,7 @@ export default function WeighbridgeScreen({
         setLoading((current) => current || !live);
 
         const response = await fetch(
-          `/api/weighbridge/status?id=${selectedId}`,
+          `/api/weighbridge/status?id=${selectedId}&mode=${mode}`,
           { cache: "no-store" },
         );
 
@@ -405,7 +407,7 @@ export default function WeighbridgeScreen({
       if (timer) clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId]);
+  }, [selectedId, mode]);
 
   return (
     <section>
@@ -644,6 +646,7 @@ export default function WeighbridgeScreen({
       {showRecords && selectedId > 0 && (
         <LastRecordsModal
           wbId={selectedId}
+          mode={mode}
           onClose={() => setShowRecords(false)}
         />
       )}

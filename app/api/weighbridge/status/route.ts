@@ -1,10 +1,19 @@
 import net from "node:net";
-import { getSession, getPlant, getWeighbridges } from "@/lib/plant";
+import {
+  getSession,
+  getPlant,
+  getWeighbridges,
+  getRawWeighbridges,
+} from "@/lib/plant";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function readWeighbridgeResponse(host: string, port: number, weighbridgeId: number) {
+function readWeighbridgeResponse(
+  host: string,
+  port: number,
+  weighbridgeId: number,
+) {
   return new Promise<string>((resolve, reject) => {
     const socket = net.createConnection({ host, port });
     let response = "";
@@ -18,7 +27,8 @@ function readWeighbridgeResponse(host: string, port: number, weighbridgeId: numb
       socket.destroy();
       if (error) reject(error);
       else if (response.trim()) resolve(response.trim());
-      else reject(new Error("Weighbridge controller returned an empty response"));
+      else
+        reject(new Error("Weighbridge controller returned an empty response"));
     };
 
     socket.setTimeout(5000);
@@ -35,24 +45,40 @@ function readWeighbridgeResponse(host: string, port: number, weighbridgeId: numb
       quietTimer = setTimeout(() => finish(), 150);
     });
     socket.on("end", () => finish());
-    socket.on("timeout", () => finish(new Error("Weighbridge controller connection timed out")));
+    socket.on("timeout", () =>
+      finish(new Error("Weighbridge controller connection timed out")),
+    );
     socket.on("error", (error) => finish(error));
   });
 }
 
 export async function GET(request: Request) {
-  const id = Number(new URL(request.url).searchParams.get("id"));
+  const url = new URL(request.url);
+  const id = Number(url.searchParams.get("id"));
+  const mode = url.searchParams.get("mode") === "raw" ? "raw" : "regular";
   const session = await getSession();
 
   if (!session || !Number.isInteger(id) || id <= 0) {
-    return Response.json({ error: true, message: "Invalid session or weighbridge ID" }, { status: 400 });
+    return Response.json(
+      { error: true, message: "Invalid session or weighbridge ID" },
+      { status: 400 },
+    );
   }
 
   try {
     // Only allow a WBID configured for the currently selected plant.
-    const weighbridges = await getWeighbridges(session);
+    const weighbridges =
+      mode === "raw"
+        ? await getRawWeighbridges(session)
+        : await getWeighbridges(session);
     if (!weighbridges.some((wb) => Number(wb.WBID) === id)) {
-      return Response.json({ error: true, message: "Weighbridge is not configured for this plant" }, { status: 404 });
+      return Response.json(
+        {
+          error: true,
+          message: "Weighbridge is not configured for this plant",
+        },
+        { status: 404 },
+      );
     }
 
     const plant = await getPlant(session);
@@ -60,7 +86,9 @@ export async function GET(request: Request) {
     const port = Number(plant?.wbPort);
 
     if (!host || !Number.isInteger(port) || port <= 0 || port > 65535) {
-      throw new Error("Weighbridge controller IP or port is not configured for this plant");
+      throw new Error(
+        "Weighbridge controller IP or port is not configured for this plant",
+      );
     }
 
     const response = await readWeighbridgeResponse(host, port, id);
@@ -71,7 +99,10 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to read weighbridge status";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to read weighbridge status";
     return Response.json({ error: true, WBID: id, message }, { status: 502 });
   }
 }

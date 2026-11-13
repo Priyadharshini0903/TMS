@@ -1,11 +1,15 @@
 
-import { NextResponse } from "next/server";
-import { getSession, getWeighbridges } from "@/lib/plant";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getSession,
+  getWeighbridges,
+  getRawWeighbridges,
+} from "@/lib/plant";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
 
@@ -16,7 +20,15 @@ export async function GET() {
       );
     }
 
-    const weighbridges = await getWeighbridges(session);
+    const mode =
+      request.nextUrl.searchParams.get("mode") === "raw"
+        ? "raw"
+        : "regular";
+
+    const weighbridges =
+      mode === "raw"
+        ? await getRawWeighbridges(session)
+        : await getWeighbridges(session);
 
     return NextResponse.json(
       weighbridges.map((wb) => ({

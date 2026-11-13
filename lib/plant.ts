@@ -55,14 +55,12 @@ export async function getGatePool(s: Session): Promise<mysql.Pool> {
     throw new Error("Invalid plant ID");
   }
 
-  // Return the existing pool when available.
   const existingPool = pools.get(s.plantId);
 
   if (existingPool) {
     return existingPool;
   }
 
-  // Read the selected plant's database configuration.
   const [rows] = await db.query<RowDataPacket[]>(
     `SELECT *
      FROM plant_db_settings
@@ -86,7 +84,6 @@ export async function getGatePool(s: Session): Promise<mysql.Pool> {
 
   const port = Number(portValue || 3306);
 
-  // Validate configuration before creating a pool.
   if (
     !host ||
     !user ||
@@ -131,18 +128,37 @@ export async function getGates(s: Session) {
 
   return rows as { SID: number; LOCATION: string }[];
 }
+
 export type Weighbridge = {
   WBID: number;
   [key: string]: unknown;
 };
 
+// Regular weighbridges: same filtering logic as original PHP.
 export async function getWeighbridges(s: Session) {
   const [rows] = await db.query<RowDataPacket[]>(
     `SELECT *
      FROM wbipconfig
-     WHERE PlantCode = ?
+     WHERE Field04 = ?
+       AND (PlantCode = ? OR PlantCode = 'LCW2')
      ORDER BY WBID ASC`,
-    [s.plantId]
+    [s.plantCode, s.plantId]
+  );
+
+  return rows as Weighbridge[];
+}
+
+// Raw weighbridges: specifically configured for Ariyalur.
+export async function getRawWeighbridges(s: Session) {
+  if (s.plantId !== "ALR") {
+    throw new Error("Raw weighbridges are not available for this plant");
+  }
+
+  const [rows] = await db.query<RowDataPacket[]>(
+    `SELECT *
+     FROM wbipconfig
+     WHERE PlantCode = 'ALR2'
+     ORDER BY WBID ASC`
   );
 
   return rows as Weighbridge[];
